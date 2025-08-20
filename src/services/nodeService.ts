@@ -195,8 +195,8 @@ export const nodeService = {
   },
 
   // Undeploy a version
-  async undeployNodeVersion(id: string, version: number): Promise<{ status: string }> {
-    const response = await axiosInstance.patch(`node-families/${id}/versions/${version}/undepoly/`);
+  async undeployNodeVersion(id: string, version: number): Promise<{ status: string, family_status: string }> {
+    const response = await axiosInstance.post(`node-families/${id}/versions/${version}/undeploy/`);
     return response.data;
   },
 
@@ -356,5 +356,49 @@ export const nodeService = {
       console.error('❌ Error fetching script content:', error);
       throw error;
     }
+  },
+
+  // Add parameters to node version
+  async addParametersToNodeVersion(familyId: string, version: number, parameterIds: string[]): Promise<any> {
+    const response = await axiosInstance.post(`node-families/${familyId}/versions/${version}/add_parameter/`, {
+      parameter_ids: parameterIds
+    });
+    return response.data;
+  },
+
+  // Remove parameters from node version
+  async removeParametersFromNodeVersion(familyId: string, version: number, parameterIds: string[]): Promise<any> {
+    const response = await axiosInstance.post(`node-families/${familyId}/versions/${version}/remove_parameter/`, {
+      parameter_ids: parameterIds
+    });
+    return response.data;
+  },
+
+  // Execute a node
+  async executeNode(familyId: string, versionId: string, subnodeId: string): Promise<any> {
+    const response = await axiosInstance.post('node-test/execute-node/', {
+      family_id: familyId,
+      version_id: versionId,
+      subnode_id: subnodeId
+    });
+    return response.data;
+  },
+
+  // Stop node execution
+  async stopNodeExecution(executionId: string): Promise<any> {
+    const response = await axiosInstance.post(`node-test/${executionId}/stop/`, {});
+    return response.data;
+  },
+
+  // Get live logs
+  async getExecutionLogs(executionId: string): Promise<{ log: string }> {
+    const response = await axiosInstance.get(`node-test/${executionId}/logs/`);
+    return response.data;
+  },
+
+  // Get subnodes for a node version
+  async getNodeVersionSubnodes(familyId: string, versionId: string): Promise<Array<{ id: string; name: string }>> {
+    const response = await axiosInstance.get(`node-test/subnodes/?family_id=${familyId}&version_id=${versionId}`);
+    return response.data;
   }
 };
