@@ -103,7 +103,7 @@ export function ParameterManagement({
 
     try {
       setLoading(true);
-      const response = await nodeService.addParametersToNodeVersion(familyId, version, selectedParameterIds);
+      const response = await nodeService.addParametersToVersion(familyId, version, selectedParameterIds);
       
       toast({
         title: "Success",
@@ -131,7 +131,7 @@ export function ParameterManagement({
   const handleRemoveParameter = async (parameterId: string) => {
     try {
       setLoading(true);
-      const response = await nodeService.removeParametersFromNodeVersion(familyId, version, [parameterId]);
+      const response = await nodeService.removeParametersFromVersion(familyId, version, [parameterId]);
       
       toast({
         title: "Success",
