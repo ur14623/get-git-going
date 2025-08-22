@@ -195,7 +195,7 @@ export const nodeService = {
   },
 
   // Undeploy a version
-  async undeployNodeVersion(id: string, version: number): Promise<{ status: string, family_status: string }> {
+  async undeployNodeVersion(id: string, version: number): Promise<{ status: string }> {
     const response = await axiosInstance.post(`node-families/${id}/versions/${version}/undeploy/`);
     return response.data;
   },
@@ -270,6 +270,21 @@ export const nodeService = {
     return response.data;
   },
 
+  // Create node version with changelog
+  async createNodeVersionWithChangelog(id: string, changelog: string): Promise<any> {
+    // Get the latest version number first
+    const versions = await this.getNodeVersions(id);
+    const latestVersion = Math.max(...versions.map(v => v.version));
+    const newVersion = latestVersion + 1;
+    
+    const response = await axiosInstance.post(`node-families/${id}/versions/`, {
+      version: newVersion,
+      changelog: changelog,
+      source_version: null
+    });
+    return response.data;
+  },
+
   // Create node (legacy - keeping for compatibility)
   async createNode(data: Partial<Node>): Promise<Node> {
     const response = await axiosInstance.post('node-families/', data);
@@ -294,7 +309,7 @@ export const nodeService = {
 
   // Add parameters to version
   async addParametersToVersion(nodeId: string, version: number, parameterIds: string[]): Promise<any> {
-    const response = await axiosInstance.patch(`nodes/${nodeId}/version/${version}/add_parameter/`, {
+    const response = await axiosInstance.post(`node-families/${nodeId}/versions/${version}/add_parameter/`, {
       parameter_ids: parameterIds
     });
     return response.data;
@@ -302,10 +317,52 @@ export const nodeService = {
 
   // Remove parameters from version
   async removeParametersFromVersion(nodeId: string, version: number, parameterIds: string[]): Promise<any> {
-    const response = await axiosInstance.patch(`nodes/${nodeId}/version/${version}/remove_parameter/`, {
+    const response = await axiosInstance.post(`node-families/${nodeId}/versions/${version}/remove_parameter/`, {
       parameter_ids: parameterIds
     });
     return response.data;
+  },
+
+  // Start execution - Updated API
+  async startExecution(familyId: string, version: number, subnodeId?: string, parameters?: any): Promise<any> {
+    const payload: any = {
+      family_id: familyId,
+      version: version
+    };
+    
+    if (subnodeId) payload.subnode_id = subnodeId;
+    if (parameters) payload.parameters = parameters;
+    
+    const response = await axiosInstance.post('executions/start/', payload);
+    return response.data;
+  },
+
+  // Stop execution - Updated API
+  async stopExecution(executionId: string): Promise<any> {
+    const response = await axiosInstance.post(`executions/${executionId}/stop/`);
+    return response.data;
+  },
+
+  // Get execution status - New API
+  async getExecutionStatus(executionId: string): Promise<any> {
+    const response = await axiosInstance.get(`executions/${executionId}/status/`);
+    return response.data;
+  },
+
+  // Legacy methods - keeping for backward compatibility but deprecated
+  async executeNode(familyId: string, versionId: string, subnodeId: string): Promise<any> {
+    console.warn('executeNode is deprecated, use startExecution instead');
+    return this.startExecution(familyId, parseInt(versionId), subnodeId);
+  },
+
+  async stopNodeExecution(executionId: string): Promise<any> {
+    console.warn('stopNodeExecution is deprecated, use stopExecution instead');
+    return this.stopExecution(executionId);
+  },
+
+  async getExecutionLogs(executionId: string): Promise<any> {
+    console.warn('getExecutionLogs is deprecated, use getExecutionStatus instead');
+    return this.getExecutionStatus(executionId);
   },
 
   // Update script file
@@ -356,49 +413,5 @@ export const nodeService = {
       console.error('❌ Error fetching script content:', error);
       throw error;
     }
-  },
-
-  // Add parameters to node version
-  async addParametersToNodeVersion(familyId: string, version: number, parameterIds: string[]): Promise<any> {
-    const response = await axiosInstance.post(`node-families/${familyId}/versions/${version}/add_parameter/`, {
-      parameter_ids: parameterIds
-    });
-    return response.data;
-  },
-
-  // Remove parameters from node version
-  async removeParametersFromNodeVersion(familyId: string, version: number, parameterIds: string[]): Promise<any> {
-    const response = await axiosInstance.post(`node-families/${familyId}/versions/${version}/remove_parameter/`, {
-      parameter_ids: parameterIds
-    });
-    return response.data;
-  },
-
-  // Execute a node
-  async executeNode(familyId: string, versionId: string, subnodeId: string): Promise<any> {
-    const response = await axiosInstance.post('node-test/execute-node/', {
-      family_id: familyId,
-      version_id: versionId,
-      subnode_id: subnodeId
-    });
-    return response.data;
-  },
-
-  // Stop node execution
-  async stopNodeExecution(executionId: string): Promise<any> {
-    const response = await axiosInstance.post(`node-test/${executionId}/stop/`, {});
-    return response.data;
-  },
-
-  // Get live logs
-  async getExecutionLogs(executionId: string): Promise<{ log: string }> {
-    const response = await axiosInstance.get(`node-test/${executionId}/logs/`);
-    return response.data;
-  },
-
-  // Get subnodes for a node version
-  async getNodeVersionSubnodes(familyId: string, versionId: string): Promise<Array<{ id: string; name: string }>> {
-    const response = await axiosInstance.get(`node-test/subnodes/?family_id=${familyId}&version_id=${versionId}`);
-    return response.data;
   }
 };

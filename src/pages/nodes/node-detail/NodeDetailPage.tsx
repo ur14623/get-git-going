@@ -11,7 +11,9 @@ import { NodeSummary } from "./components/NodeSummary";
 import { PropertiesSection } from "./components/PropertiesSection";
 import { SubnodesSection } from "./components/SubnodesSection";
 import { VersionHistoryModal } from "./components/VersionHistoryModal";
+import { CreateVersionModal } from "./components/CreateVersionModal";
 import axios from 'axios';
+import { LoadingSpinner } from "@/components/ui/loading";
 
 export function NodeDetailPage() {
   const { id } = useParams();
@@ -27,12 +29,13 @@ export function NodeDetailPage() {
   const [selectedVersion, setSelectedVersion] = useState<NodeVersionDetail | null>(null);
   const [nodeVersionsLoading, setNodeVersionsLoading] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+  const [createVersionOpen, setCreateVersionOpen] = useState(false);
   
   // Active node checking
   const [currentActiveNode, setCurrentActiveNode] = useState<Node | null>(null);
 
   // Parameters management
-  const [nodeParameters, setNodeParameters] = useState<Parameter[]>([]);
+  const [nodeParameters, setNodeParameters] = useState<any[]>([]);
   
   // Script content management
   const [scriptContent, setScriptContent] = useState<string>("");
@@ -47,21 +50,8 @@ export function NodeDetailPage() {
         const nodeData = await nodeService.getNode(id);
         setNode(nodeData);
         
-        // Map parameters from published version
-        const mappedParameters = (nodeData.published_version?.parameters || []).map((param: any) => ({
-          id: param.parameter_id,
-          key: param.key,
-          default_value: param.value,
-          datatype: param.datatype,
-          node: nodeData.id,
-          required: false, // Default value since not in API
-          last_updated_by: null,
-          last_updated_at: nodeData.updated_at,
-          is_active: true,
-          created_at: nodeData.updated_at || new Date().toISOString(),
-          created_by: null
-        }));
-        setNodeParameters(mappedParameters);
+        // Initialize with empty parameters, will be set when version is selected
+        setNodeParameters([]);
         
         // Fetch initial data
         await fetchNodeVersions();
@@ -100,6 +90,11 @@ export function NodeDetailPage() {
       console.log('🔍 Subnodes in active version:', activeVersion?.subnodes);
       console.log('🔍 Subnodes length:', activeVersion?.subnodes?.length);
       setSelectedVersion(activeVersion);
+      
+      // Set parameters from selected version
+      if (activeVersion?.parameters) {
+        setNodeParameters(activeVersion.parameters);
+      }
     } catch (err: any) {
       console.error('Error fetching node versions:', err);
       toast({
@@ -155,12 +150,36 @@ export function NodeDetailPage() {
   // Event handlers
   const handleEditVersion = () => {
     if (selectedVersion && selectedVersion.state !== 'published') {
-      navigate(`/nodes/${id}/edit?version=${selectedVersion.version}`);
+      navigate(`/nodes/${id}/edit-version?version=${selectedVersion.version}`);
     }
   };
 
   const handleCreateNewVersion = () => {
-    navigate(`/nodes/${id}/edit?newVersion=true`);
+    setCreateVersionOpen(true);
+  };
+
+  const handleCreateVersionSubmit = async (changelog: string) => {
+    if (!id) return;
+    
+    try {
+      await nodeService.createNodeVersionWithChangelog(id, changelog);
+      setCreateVersionOpen(false);
+      
+      // Refresh versions list
+      await fetchNodeVersions();
+      
+      toast({
+        title: "Version Created",
+        description: "New version created successfully",
+      });
+    } catch (error) {
+      console.error('Failed to create version:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new version",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleToggleDeployment = async () => {
@@ -175,22 +194,7 @@ export function NodeDetailPage() {
           description: `Version ${selectedVersion.version} has been undeployed`,
         });
       } else {
-        // Check if another node is currently active
-        const activeNode = await nodeService.getActiveNode();
-        
-        if (activeNode && activeNode.id !== id) {
-          // Show confirmation dialog for deactivating current active node
-          const shouldProceed = window.confirm(
-            `Node "${activeNode.name}" is currently active. ` +
-            `Activating this node will deactivate "${activeNode.name}". Do you want to proceed?`
-          );
-          
-          if (!shouldProceed) {
-            return;
-          }
-        }
-        
-        // Deploy/activate version
+        // Deploy the version (will automatically deactivate other versions of this node)
         await nodeService.deployNodeVersion(id, selectedVersion.version);
         toast({
           title: "Node Activated",
@@ -221,6 +225,8 @@ export function NodeDetailPage() {
   const handleSelectVersion = (version: NodeVersionDetail) => {
     setSelectedVersion(version);
     setVersionHistoryOpen(false);
+    // Update parameters for the selected version
+    setNodeParameters(version.parameters || []);
     toast({
       title: "Version Selected",
       description: `Now viewing version ${version.version}`,
@@ -231,22 +237,7 @@ export function NodeDetailPage() {
     if (!id) return;
     
     try {
-      // Check if another node is currently active
-      const activeNode = await nodeService.getActiveNode();
-      
-      if (activeNode && activeNode.id !== id) {
-        // Show confirmation dialog for deactivating current active node
-        const shouldProceed = window.confirm(
-          `Node "${activeNode.name}" is currently active. ` +
-          `Activating this node will deactivate "${activeNode.name}". Do you want to proceed?`
-        );
-        
-        if (!shouldProceed) {
-          return;
-        }
-      }
-      
-      // Deploy the version using new API
+      // Deploy the version (will automatically deactivate other versions of this node)
       await nodeService.deployNodeVersion(id, version.version);
       
       toast({
@@ -322,7 +313,7 @@ export function NodeDetailPage() {
 
       // Refresh versions and navigate to edit the new version
       await fetchNodeVersions();
-      navigate(`/nodes/${id}/edit?version=${newVersion.version}`);
+      navigate(`/nodes/${id}/edit-version?version=${newVersion.version}`);
     } catch (err: any) {
       console.error('Error cloning version:', err);
       toast({
@@ -364,7 +355,7 @@ export function NodeDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -393,20 +384,6 @@ export function NodeDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Current Active Node Warning */}
-      {currentActiveNode && currentActiveNode.id !== node.id && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-            <span className="text-yellow-800 font-medium">
-              Another node is currently active: "{currentActiveNode.name}"
-            </span>
-          </div>
-          <p className="text-yellow-700 text-sm mt-1">
-            Activating this node will automatically deactivate the currently active node.
-          </p>
-        </div>
-      )}
 
       {/* Header Section */}
       <NodeHeader
@@ -464,7 +441,10 @@ export function NodeDetailPage() {
             <div className="relative">
               {scriptLoading ? (
                 <div className="flex items-center justify-center h-32 bg-muted rounded-lg">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+                    <span className="text-sm text-muted-foreground">Loading script...</span>
+                  </div>
                 </div>
               ) : scriptError ? (
                 <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-lg">
@@ -497,6 +477,14 @@ export function NodeDetailPage() {
         onSelectVersion={handleSelectVersion}
         onActivateVersion={activateNodeVersion}
         isLoading={nodeVersionsLoading}
+      />
+
+      {/* Create Version Modal */}
+      <CreateVersionModal
+        open={createVersionOpen}
+        onOpenChange={setCreateVersionOpen}
+        onCreateVersion={handleCreateVersionSubmit}
+        isLoading={loading}
       />
 
       {/* Back to Nodes Button */}
