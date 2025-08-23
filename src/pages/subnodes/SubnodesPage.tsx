@@ -118,15 +118,6 @@ export function SubnodesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Input
-            placeholder="Search subnodes..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="max-w-sm"
-          />
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => {
@@ -144,6 +135,15 @@ export function SubnodesPage() {
               <SelectItem value="20">20</SelectItem>
             </SelectContent>
           </Select>
+          <Input
+            placeholder="Search subnodes..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="max-w-sm"
+          />
         </div>
         
         <div className="flex items-center space-x-2">

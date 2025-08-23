@@ -145,15 +145,6 @@ const handleDelete = async (flowId: string) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Input
-            placeholder="Search flows..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="max-w-sm"
-          />
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => {
@@ -171,6 +162,15 @@ const handleDelete = async (flowId: string) => {
               <SelectItem value="20">20</SelectItem>
             </SelectContent>
           </Select>
+          <Input
+            placeholder="Search flows..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="max-w-sm"
+          />
         </div>
         <div className="flex items-center space-x-2">
           <div className="flex border border-border rounded-md">

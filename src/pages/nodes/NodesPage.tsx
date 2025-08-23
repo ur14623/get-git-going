@@ -207,15 +207,6 @@ export function NodesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Input
-            placeholder="Search nodes..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="max-w-sm"
-          />
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => {
@@ -233,6 +224,15 @@ export function NodesPage() {
               <SelectItem value="20">20</SelectItem>
             </SelectContent>
           </Select>
+          <Input
+            placeholder="Search nodes..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="max-w-sm"
+          />
         </div>
         
         <div className="flex items-center space-x-2">
