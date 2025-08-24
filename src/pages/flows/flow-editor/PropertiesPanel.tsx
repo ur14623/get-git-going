@@ -66,24 +66,27 @@ export function PropertiesPanel({ selectedNode, onUpdateNode, onDeleteNode, flow
     }
   }, [selectedNode?.data?.nodeId]);
 
+  // 4. SELECT SUBNODES - Real-time subnode selection with parameter updates
   const handleSubnodeSelection = async (subnodeId: string) => {
     if (!selectedNode?.data) return;
     
     const selectedSubnode = availableSubnodes.find(sub => sub.id === subnodeId);
     
-    // Optimistically update UI first
+    // Optimistically update UI first - include parameter refresh
     onUpdateNode(selectedNode.id, {
       ...(selectedNode.data as Record<string, any>),
       selectedSubnode: selectedSubnode,
       subnodeId: subnodeId,
+      parameters: selectedSubnode?.parameters || [], // Update parameters immediately
     });
     
-    // Make real-time API call if flowId is provided
-    if (flowId && selectedNode.data?.nodeId) {
+    // Make real-time API call if flowId is provided  
+    if (flowId && selectedNode.id) {
       try {
-        await flowService.updateFlowNodeSubnode(String(selectedNode.data.nodeId), subnodeId);
+        // Use the flowNode ID (selectedNode.id in RealTimeFlowEditor)
+        await flowService.updateFlowNodeSubnode(selectedNode.id, subnodeId);
         console.log('✅ Subnode selection updated successfully via API');
-        toast.success(`Subnode "${selectedSubnode?.name}" selected successfully`);
+        toast.success(`Subnode "${selectedSubnode?.name}" selected - parameters updated`);
       } catch (error) {
         console.error('❌ Error updating subnode selection:', error);
         toast.error('Failed to update subnode selection');
@@ -93,6 +96,7 @@ export function PropertiesPanel({ selectedNode, onUpdateNode, onDeleteNode, flow
           ...(selectedNode.data as Record<string, any>),
           selectedSubnode: undefined,
           subnodeId: undefined,
+          parameters: [], // Revert parameters too
         });
       }
     }
