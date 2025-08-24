@@ -10,7 +10,6 @@ import { HomePage } from "@/pages/HomePage";
 import { FlowsPage } from "@/pages/flows/FlowsPage";
 import { FlowDetailPage } from "@/pages/flows/flow-detail/FlowDetailPage";
 import { FlowEditor } from "@/pages/flows/flow-editor/FlowEditor";
-import { RealTimeFlowEditor } from "@/pages/flows/flow-editor/RealTimeFlowEditor";
 import { NodesPage } from "@/pages/nodes/NodesPage";
 import { NodeDetailPage } from "@/pages/nodes/node-detail/NodeDetailPage";
 import { CreateNodePage } from "@/pages/nodes/create-node/CreateNodePage";
@@ -52,7 +51,7 @@ const App = () => (
               <Route path="/" element={<HomePage />} />
               <Route path="/flows" element={<FlowsPage />} />
               <Route path="/flows/:id" element={<FlowDetailPage />} />
-              <Route path="/flows/:id/edit" element={<RealTimeFlowEditor />} />
+              <Route path="/flows/:id/edit" element={<FlowEditor />} />
               <Route path="/nodes" element={<NodesPage />} />
               <Route path="/nodes/new" element={<CreateNodePage />} />
               <Route path="/nodes/:id" element={<NodeDetailPage />} />
