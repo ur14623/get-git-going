@@ -25,7 +25,7 @@ export const RawBackupNode = memo(({ data, selected }: RawBackupNodeProps) => {
       <Handle 
         type="target" 
         position={Position.Left} 
-        className="!bg-edge-default !border-edge-default !w-3 !h-3" 
+        className="!bg-primary !border-background !w-3 !h-3" 
       />
       
       <div className="space-y-3">
