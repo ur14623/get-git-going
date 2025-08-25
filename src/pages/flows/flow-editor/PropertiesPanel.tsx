@@ -81,7 +81,7 @@ export function PropertiesPanel({ selectedNode, onUpdateNode, onDeleteNode, flow
     // Make real-time API call if flowId is provided
     if (flowId && selectedNode.data?.nodeId) {
       try {
-        await flowService.updateFlowNodeSubnode(String(selectedNode.data.nodeId), subnodeId);
+        await flowService.setFlowNodeSubnode(String(selectedNode.data.nodeId), subnodeId);
         console.log('✅ Subnode selection updated successfully via API');
         toast.success(`Subnode "${selectedSubnode?.name}" selected successfully`);
       } catch (error) {
