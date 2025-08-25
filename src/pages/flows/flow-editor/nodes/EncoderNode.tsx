@@ -42,7 +42,7 @@ export const EncoderNode = memo(({ data, selected }: EncoderNodeProps) => {
         
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            Encoder
+            {data.label}
           </Badge>
           {data.subnodes && (
             <Badge variant="secondary" className="text-xs">

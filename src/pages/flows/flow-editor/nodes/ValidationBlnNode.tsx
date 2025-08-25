@@ -42,7 +42,7 @@ export const ValidationBlnNode = memo(({ data, selected }: ValidationBlnNodeProp
         
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            Validation BLN
+            {data.label}
           </Badge>
           {data.subnodes && (
             <Badge variant="secondary" className="text-xs">

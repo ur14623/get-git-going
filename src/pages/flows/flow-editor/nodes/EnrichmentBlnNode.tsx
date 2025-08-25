@@ -42,7 +42,7 @@ export const EnrichmentBlnNode = memo(({ data, selected }: EnrichmentBlnNodeProp
         
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            Enrichment BLN
+            {data.label}
           </Badge>
           {data.subnodes && (
             <Badge variant="secondary" className="text-xs">

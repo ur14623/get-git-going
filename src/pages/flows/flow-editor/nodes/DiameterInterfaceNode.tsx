@@ -42,7 +42,7 @@ export const DiameterInterfaceNode = memo(({ data, selected }: DiameterInterface
         
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            Diameter Interface
+            {data.label}
           </Badge>
           {data.subnodes && (
             <Badge variant="secondary" className="text-xs">

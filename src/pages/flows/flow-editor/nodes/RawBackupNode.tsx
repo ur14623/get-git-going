@@ -42,7 +42,7 @@ export const RawBackupNode = memo(({ data, selected }: RawBackupNodeProps) => {
         
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            Raw Backup
+            {data.label}
           </Badge>
           {data.subnodes && (
             <Badge variant="secondary" className="text-xs">
