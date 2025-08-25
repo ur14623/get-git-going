@@ -30,21 +30,7 @@ export function PropertiesPanel({ selectedNode, onUpdateNode, onDeleteNode, flow
   const [availableSubnodes, setAvailableSubnodes] = useState<Subnode[]>([]);
   const [loadingSubnodes, setLoadingSubnodes] = useState(false);
 
-  if (!selectedNode) {
-    return (
-      <div className="w-80 bg-card border-l border-border shadow-sm flex items-center justify-center">
-        <div className="text-center p-6">
-          <Settings className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="font-medium text-foreground mb-2">No Node Selected</h3>
-          <p className="text-sm text-muted-foreground">
-            Click on a node to view and edit its properties
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Fetch subnodes for the selected node
+  // Fetch subnodes for the selected node - MUST be before early return
   useEffect(() => {
     if (selectedNode?.data?.nodeId) {
       setLoadingSubnodes(true);
@@ -65,6 +51,20 @@ export function PropertiesPanel({ selectedNode, onUpdateNode, onDeleteNode, flow
       setAvailableSubnodes([]);
     }
   }, [selectedNode?.data?.nodeId]);
+
+  if (!selectedNode) {
+    return (
+      <div className="w-80 bg-card border-l border-border shadow-sm flex items-center justify-center">
+        <div className="text-center p-6">
+          <Settings className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="font-medium text-foreground mb-2">No Node Selected</h3>
+          <p className="text-sm text-muted-foreground">
+            Click on a node to view and edit its properties
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubnodeSelection = async (subnodeId: string) => {
     if (!selectedNode?.data) return;
