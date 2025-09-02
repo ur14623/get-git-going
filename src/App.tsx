@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 
 import { MainLayout } from "@/components/layout/main-layout";
+import { DashboardPage } from "@/pages/DashboardPage";
 import { HomePage } from "@/pages/HomePage";
 import { FlowsPage } from "@/pages/flows/FlowsPage";
 import { FlowDetailPage } from "@/pages/flows/flow-detail/FlowDetailPage";
@@ -48,7 +49,7 @@ const App = () => (
         <BrowserRouter>
           <MainLayout>
             <Routes>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={<DashboardPage />} />
               <Route path="/flows" element={<FlowsPage />} />
               <Route path="/flows/:id" element={<FlowDetailPage />} />
               <Route path="/flows/:id/edit" element={<FlowEditorRoute />} />
