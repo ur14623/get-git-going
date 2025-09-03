@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export function DevToolPage() {
   
   // Flows state
   const { data: flowsData, loading: flowsLoading } = useItems();
-  const [flows, setFlows] = useState(flowsData || []);
+  const [flows, setFlows] = useState<any[]>([]);
   const [showCreateFlowDialog, setShowCreateFlowDialog] = useState(false);
   const [showCloneFlowDialog, setShowCloneFlowDialog] = useState(false);
   const [flowToClone, setFlowToClone] = useState<any>(null);
@@ -74,10 +74,17 @@ export function DevToolPage() {
   };
 
   // Initialize data
-  useState(() => {
+  useEffect(() => {
     fetchNodes();
     fetchParameters();
-  });
+  }, []);
+
+  // Sync flows data when it changes
+  useEffect(() => {
+    if (flowsData) {
+      setFlows(flowsData);
+    }
+  }, [flowsData]);
 
   // Flow handlers
   const handleDeleteFlow = async (flowId: string) => {
