@@ -31,6 +31,7 @@ import { FlowReportPage } from "@/pages/reports/FlowReportPage";
 import { NodeReportPage } from "@/pages/reports/NodeReportPage";
 import { FlowAlertPage } from "@/pages/alerts/FlowAlertPage";
 import { NodeAlertPage } from "@/pages/alerts/NodeAlertPage";
+import { DevToolPage } from "@/pages/DevToolPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ const App = () => (
               <Route path="/reports/nodes" element={<NodeReportPage />} />
               <Route path="/alerts/flows" element={<FlowAlertPage />} />
               <Route path="/alerts/nodes" element={<NodeAlertPage />} />
+              <Route path="/devtool" element={<DevToolPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -157,18 +157,8 @@ const handleDelete = async (flowId: string) => {
                   Create, manage, and monitor your data processing flows
                 </p>
               </div>
-              <div className="flex items-center space-x-3">
-                <Button variant="outline" size="sm" className="border-primary/20 hover:bg-primary/5">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import Flow
-                </Button>
-                <Button 
-                  onClick={() => setShowCreateDialog(true)}
-                  className="bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary shadow-elegant"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create New Flow
-                </Button>
+              <div className="text-sm text-muted-foreground">
+                Read-only view - Use DevTool for management operations
               </div>
             </div>
           </div>
@@ -273,47 +263,6 @@ const handleDelete = async (flowId: string) => {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleExport(flow)}
-                        className="border-border/50 hover:bg-success/10 hover:border-success/30 transition-all"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleClone(flow)}
-                        className="border-border/50 hover:bg-info/10 hover:border-info/30 transition-all"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="border-border/50 hover:bg-destructive/10 hover:border-destructive/30 transition-all"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Flow</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{flow.name}"? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(flow.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -379,21 +328,6 @@ const handleDelete = async (flowId: string) => {
                       <DropdownMenuItem onClick={() => navigate(`/flows/${flow.id}`)}>
                         <Eye className="h-4 w-4 mr-2" />
                         View
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleExport(flow)}>
-                        <Download className="h-4 w-4 mr-2" />
-                        Export
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleClone(flow)}>
-                        <Copy className="h-4 w-4 mr-2" />
-                        Clone
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDelete(flow.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
