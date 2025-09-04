@@ -9,10 +9,13 @@ import {
   FileText,
   Bell,
   BarChart3,
-  Wrench
+  Wrench,
+  Server,
+  ChevronRight
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useSection } from "@/contexts/SectionContext";
+import { useState } from "react";
 
 import {
   Sidebar,
@@ -47,6 +50,24 @@ const reportItems = [
 
 const devToolItems = [
   { title: "DevTool", url: "/devtool", icon: Wrench },
+];
+
+const mediationInstances = [
+  { 
+    title: "Charging Gateway Mediation", 
+    icon: Server, 
+    url: "/mediations/charging"
+  },
+  { 
+    title: "Convergent Mediation", 
+    icon: Server, 
+    url: "/mediations/convergent"
+  },
+  { 
+    title: "NCC Mediation", 
+    icon: Server, 
+    url: "/mediations/ncc"
+  }
 ];
 
 export function AppSidebar() {
@@ -91,6 +112,33 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        {/* Mediations Group */}
+        <SidebarGroup>
+          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
+            Mediations
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mediationInstances.map((mediation) => (
+                <SidebarMenuItem key={mediation.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to={mediation.url} 
+                      className={getNavClasses(mediation.url)}
+                      onClick={() => handleSectionClick(mediation.title)}
+                    >
+                      <mediation.icon className="h-4 w-4" />
+                      {!collapsed && <span>{mediation.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
         {/* Configuration Group */}
         <SidebarGroup>
           <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>

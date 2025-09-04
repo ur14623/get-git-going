@@ -140,8 +140,9 @@ export function FlowDetailPage() {
   };
 
   // Helper function to determine node type based on name or other criteria
-  const getNodeType = (nodeName: string): string => {
-    const name = nodeName.toLowerCase();
+  const getNodeType = (nodeName?: string): string => {
+    const name = (nodeName ?? '').toLowerCase();
+    if (!name) return 'generic'; // default fallback when name is missing
     if (name.includes('sftp') || name.includes('collector')) return 'sftp_collector';
     if (name.includes('fdc')) return 'fdc';
     if (name.includes('asn1') || name.includes('decoder')) return 'asn1_decoder';
@@ -260,15 +261,7 @@ export function FlowDetailPage() {
               Stop
             </Button>
           )}
-          {canEdit() ? (
-            <Button onClick={() => navigate(`/flows/${id}/edit`)}>
-              Edit Flow
-            </Button>
-          ) : (
-            <Button onClick={() => handleCreateNewVersion()}>
-              Create New Version
-            </Button>
-          )}
+          {/* Edit buttons removed for configuration view */}
         </div>
       </div>
 
