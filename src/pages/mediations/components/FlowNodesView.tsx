@@ -13,8 +13,20 @@ import {
   XCircle,
   Clock
 } from "lucide-react";
+import {
+  ReactFlow,
+  Controls,
+  Background,
+  Node,
+  Edge,
+  BackgroundVariant,
+  Handle,
+  Position,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { memo } from "react";
 
-interface Node {
+interface StreamNode extends Record<string, unknown> {
   id: string;
   name: string;
   type: "collector" | "processor" | "distributor";
@@ -27,11 +39,101 @@ interface Node {
   nextRun?: string;
 }
 
-interface FlowNodesViewProps {
-  nodes: Node[];
-}
+// Custom node component for the pipeline
+const PipelineNode = memo(({ data }: { data: StreamNode }) => {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "running": return "border-success bg-success/10";
+      case "stopped": return "border-muted-foreground bg-muted/30";
+      case "partial": return "border-warning bg-warning/10";
+      default: return "border-muted-foreground bg-muted/30";
+    }
+  };
 
-const mockNodes: Node[] = [
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "running": return <CheckCircle className="h-4 w-4 text-success" />;
+      case "stopped": return <XCircle className="h-4 w-4 text-muted-foreground" />;
+      case "partial": return <AlertTriangle className="h-4 w-4 text-warning" />;
+      default: return <XCircle className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case "collector": return "bg-blue-50 text-blue-700 border-blue-200";
+      case "processor": return "bg-purple-50 text-purple-700 border-purple-200";
+      case "distributor": return "bg-green-50 text-green-700 border-green-200";
+      default: return "bg-gray-50 text-gray-700 border-gray-200";
+    }
+  };
+
+  return (
+    <div className={`bg-card border-2 rounded-lg p-4 min-w-[220px] shadow-md transition-all duration-200 ${getStatusColor(data.status)}`}>
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        className="!bg-primary !border-primary !w-3 !h-3" 
+      />
+      
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Badge className={getTypeColor(data.type)} variant="outline">
+            {data.type}
+          </Badge>
+          {getStatusIcon(data.status)}
+        </div>
+        
+        <div>
+          <h3 className="font-semibold text-sm mb-1">{data.name}</h3>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <div>Host: {data.host}</div>
+            <div>Last run: {data.lastRun}</div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-background/50 p-2 rounded border">
+            <div className="font-medium">Processed</div>
+            <div className="text-foreground">{data.processed.toLocaleString()}</div>
+          </div>
+          <div className="bg-background/50 p-2 rounded border">
+            <div className="font-medium">Errors</div>
+            <div className={data.errors > 0 ? "text-destructive" : "text-success"}>
+              {data.errors}
+            </div>
+          </div>
+        </div>
+        
+        {data.warnings > 0 && (
+          <div className="text-xs text-warning">
+            ⚠️ {data.warnings} warnings
+          </div>
+        )}
+        
+        <div className="text-xs text-muted-foreground">
+          Next: {data.nextRun === "Cannot schedule" ? (
+            <span className="text-destructive">{data.nextRun}</span>
+          ) : data.nextRun === "N/A" ? (
+            <span>Continuous</span>
+          ) : (
+            data.nextRun
+          )}
+        </div>
+      </div>
+      
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        className="!bg-primary !border-primary !w-3 !h-3" 
+      />
+    </div>
+  );
+});
+
+PipelineNode.displayName = 'PipelineNode';
+
+const mockNodes: StreamNode[] = [
   {
     id: "1",
     name: "SFTP Collector",
@@ -82,7 +184,39 @@ const mockNodes: Node[] = [
   }
 ];
 
+// Convert stream nodes to ReactFlow nodes and edges
+const createFlowData = (streamNodes: StreamNode[]) => {
+  const nodes: Node[] = streamNodes.map((node, index) => ({
+    id: node.id,
+    type: 'pipelineNode',
+    position: { x: index * 300, y: 100 },
+    data: node,
+  }));
+
+  const edges: Edge[] = [];
+  for (let i = 0; i < streamNodes.length - 1; i++) {
+    edges.push({
+      id: `${streamNodes[i].id}-${streamNodes[i + 1].id}`,
+      source: streamNodes[i].id,
+      target: streamNodes[i + 1].id,
+      type: 'smoothstep',
+    });
+  }
+
+  return { nodes, edges };
+};
+
+const nodeTypes = {
+  pipelineNode: PipelineNode,
+};
+
+interface FlowNodesViewProps {
+  nodes?: StreamNode[];
+}
+
 export function FlowNodesView({ nodes = mockNodes }: FlowNodesViewProps) {
+  const { nodes: flowNodes, edges: flowEdges } = createFlowData(nodes);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "running": return "bg-success/10 text-success border-success/20";
@@ -132,51 +266,29 @@ export function FlowNodesView({ nodes = mockNodes }: FlowNodesViewProps) {
           </TabsList>
           
           <TabsContent value="graph" className="mt-6">
-            {/* Graph View - Visual Pipeline */}
-            <div className="flex items-center justify-center min-h-[300px] bg-muted/30 rounded-lg border-2 border-dashed border-border">
-              <div className="flex items-center gap-8 p-8">
-                {nodes.map((node, index) => (
-                  <div key={node.id} className="flex items-center">
-                    <div className="relative group">
-                      <div className="bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer min-w-[120px]">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge className={getTypeColor(node.type)} variant="outline">
-                            {node.type}
-                          </Badge>
-                          {getStatusIcon(node.status)}
-                        </div>
-                        <h4 className="font-medium text-sm mb-1">{node.name}</h4>
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <div>Processed: {node.processed.toLocaleString()}</div>
-                          {node.errors > 0 && (
-                            <div className="text-destructive">Errors: {node.errors}</div>
-                          )}
-                          {node.warnings > 0 && (
-                            <div className="text-warning">Warnings: {node.warnings}</div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                        <div className="font-medium">{node.name}</div>
-                        <div>Type: {node.type}</div>
-                        <div>Last run: {node.lastRun}</div>
-                        <div>Host: {node.host}</div>
-                      </div>
-                    </div>
-                    
-                    {/* Arrow */}
-                    {index < nodes.length - 1 && (
-                      <div className="mx-4 text-muted-foreground">
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+            {/* Graph View - ReactFlow Pipeline */}
+            <div className="h-[500px] w-full bg-background border rounded-lg">
+              <ReactFlow
+                nodes={flowNodes}
+                edges={flowEdges}
+                nodeTypes={nodeTypes}
+                fitView
+                fitViewOptions={{
+                  padding: 0.2,
+                }}
+                className="bg-background"
+                nodesDraggable={false}
+                nodesConnectable={false}
+                elementsSelectable={false}
+              >
+                <Controls className="bg-card border-border" />
+                <Background 
+                  variant={BackgroundVariant.Dots} 
+                  gap={20} 
+                  size={1} 
+                  className="opacity-30" 
+                />
+              </ReactFlow>
             </div>
           </TabsContent>
           
