@@ -47,11 +47,11 @@ const mockStreamPerformanceData = {
     "peak": 200000
   },
   recordCategories: {
-    "In": 145230,
-    "Out": 142180,
-    "Rej.": 2150,
+    "In": 145200,
+    "Out": 142200,
+    "Rej.": 2100,
     "Rep.": 890,
-    "Cre.": 5420,
+    "Cre.": 5400,
     "Dup.": 340,
     "Ret.": 180,
     "Fil.": 980,
