@@ -8,7 +8,7 @@ import {
   Clock,
   Zap
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
 interface PerformanceStatsProps {
   throughputLastHour: number;
@@ -59,6 +59,27 @@ const mockStreamPerformanceData = {
     "Red.": 450
   }
 };
+
+// Chart data for throughput over time
+const throughputChartData = [
+  { minutes: "1", records: 10000 },
+  { minutes: "15", records: 20000 },
+  { minutes: "60", records: 30000 }
+];
+
+// Chart data for record categories
+const recordCategoriesChartData = [
+  { category: "In", count: 145200 },
+  { category: "Out", count: 142200 },
+  { category: "Rej.", count: 2100 },
+  { category: "Rep.", count: 890 },
+  { category: "Cre.", count: 5400 },
+  { category: "Dup.", count: 340 },
+  { category: "Ret.", count: 180 },
+  { category: "Fil.", count: 980 },
+  { category: "Sto.", count: 120 },
+  { category: "Red.", count: 450 }
+];
 
 export function PerformanceStats({
   throughputLastHour = 520,
@@ -204,75 +225,97 @@ export function PerformanceStats({
         </CardContent>
       </Card>
 
-      {/* Stream Performance Monitoring */}
+      {/* Latest Throughput Chart */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Stream Performance
+            <TrendingUp className="h-5 w-5" />
+            Latest Throughput (Last Hour)
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {/* Latest Throughput */}
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-3">Latest Throughput (Last Hour)</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-muted/30 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-primary">{formatNumber(mockStreamPerformanceData.throughput["1min"])}</div>
-                  <div className="text-sm text-muted-foreground">Records</div>
-                  <div className="text-xs font-medium mt-1">1 Minute</div>
-                </div>
-                <div className="bg-muted/30 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-primary">{formatNumber(mockStreamPerformanceData.throughput["15min"])}</div>
-                  <div className="text-sm text-muted-foreground">Records</div>
-                  <div className="text-xs font-medium mt-1">15 Minutes</div>
-                </div>
-                <div className="bg-muted/30 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-primary">{formatNumber(mockStreamPerformanceData.throughput["60min"])}</div>
-                  <div className="text-sm text-muted-foreground">Records</div>
-                  <div className="text-xs font-medium mt-1">60 Minutes</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Event Records Processed */}
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-3">Event Records Processed (Last Hour)</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
-                  <div className="text-2xl font-bold text-primary">{formatNumber(mockStreamPerformanceData.eventRecords.lastHour)}</div>
-                  <div className="text-sm text-muted-foreground">Current Hour</div>
-                </div>
-                <div className="bg-gradient-to-r from-secondary/10 to-secondary/5 rounded-lg p-4 border border-secondary/20">
-                  <div className="text-2xl font-bold text-secondary-foreground">{formatNumber(mockStreamPerformanceData.eventRecords.peak)}</div>
-                  <div className="text-sm text-muted-foreground">Peak Records</div>
-                </div>
-              </div>
-            </div>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={throughputChartData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="minutes" 
+                  className="text-muted-foreground"
+                  fontSize={12}
+                  label={{ value: 'Minutes', position: 'insideBottom', offset: -10 }}
+                />
+                <YAxis 
+                  className="text-muted-foreground"
+                  fontSize={12}
+                  label={{ value: 'Records', angle: -90, position: 'insideLeft' }}
+                  tickFormatter={(value) => `${value / 1000}K`}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px'
+                  }}
+                  formatter={(value) => [`${(value as number).toLocaleString()} records`, 'Records']}
+                  labelFormatter={(label) => `${label} minutes`}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="records" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 6 }}
+                  activeDot={{ r: 8, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
 
-      {/* Operational Statistics */}
+      {/* Event Records Processed Chart */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Operational Statistics
+            <BarChart3 className="h-5 w-5" />
+            Event Records Processed (Last Hour)
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-4">Number of Records</h4>
-            <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-3">
-              {Object.entries(mockStreamPerformanceData.recordCategories).map(([category, count]) => (
-                <div key={category} className="bg-muted/30 rounded-lg p-3 text-center hover:bg-muted/50 transition-colors">
-                  <div className="text-lg font-bold text-foreground">{formatNumber(count)}</div>
-                  <div className="text-xs font-medium text-muted-foreground">{category}</div>
-                </div>
-              ))}
-            </div>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={recordCategoriesChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="category" 
+                  className="text-muted-foreground"
+                  fontSize={12}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis 
+                  className="text-muted-foreground"
+                  fontSize={12}
+                  tickFormatter={(value) => value >= 1000 ? `${value / 1000}K` : value.toString()}
+                  label={{ value: 'Number of Records', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px'
+                  }}
+                  formatter={(value) => [`${(value as number).toLocaleString()}`, 'Records']}
+                  labelFormatter={(label) => `Category: ${label}`}
+                />
+                <Bar 
+                  dataKey="count" 
+                  fill="hsl(var(--primary))"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
