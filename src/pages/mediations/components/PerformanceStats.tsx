@@ -36,6 +36,30 @@ const mockNodePerformance = [
   { name: "FDC Distributor", throughput: 412, errors: 0, status: "running" }
 ];
 
+const mockStreamPerformanceData = {
+  throughput: {
+    "1min": 10000,
+    "15min": 20000,
+    "60min": 30000
+  },
+  eventRecords: {
+    "lastHour": 100000,
+    "peak": 200000
+  },
+  recordCategories: {
+    "In": 145230,
+    "Out": 142180,
+    "Rej.": 2150,
+    "Rep.": 890,
+    "Cre.": 5420,
+    "Dup.": 340,
+    "Ret.": 180,
+    "Fil.": 980,
+    "Sto.": 120,
+    "Red.": 450
+  }
+};
+
 export function PerformanceStats({
   throughputLastHour = 520,
   eventsLastHour = 15420,
@@ -176,6 +200,79 @@ export function PerformanceStats({
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stream Performance Monitoring */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Stream Performance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Latest Throughput */}
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-3">Latest Throughput (Last Hour)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-muted/30 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-primary">{formatNumber(mockStreamPerformanceData.throughput["1min"])}</div>
+                  <div className="text-sm text-muted-foreground">Records</div>
+                  <div className="text-xs font-medium mt-1">1 Minute</div>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-primary">{formatNumber(mockStreamPerformanceData.throughput["15min"])}</div>
+                  <div className="text-sm text-muted-foreground">Records</div>
+                  <div className="text-xs font-medium mt-1">15 Minutes</div>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-primary">{formatNumber(mockStreamPerformanceData.throughput["60min"])}</div>
+                  <div className="text-sm text-muted-foreground">Records</div>
+                  <div className="text-xs font-medium mt-1">60 Minutes</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Event Records Processed */}
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-3">Event Records Processed (Last Hour)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
+                  <div className="text-2xl font-bold text-primary">{formatNumber(mockStreamPerformanceData.eventRecords.lastHour)}</div>
+                  <div className="text-sm text-muted-foreground">Current Hour</div>
+                </div>
+                <div className="bg-gradient-to-r from-secondary/10 to-secondary/5 rounded-lg p-4 border border-secondary/20">
+                  <div className="text-2xl font-bold text-secondary-foreground">{formatNumber(mockStreamPerformanceData.eventRecords.peak)}</div>
+                  <div className="text-sm text-muted-foreground">Peak Records</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Operational Statistics */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Operational Statistics
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <h4 className="text-sm font-medium text-muted-foreground mb-4">Number of Records</h4>
+            <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-3">
+              {Object.entries(mockStreamPerformanceData.recordCategories).map(([category, count]) => (
+                <div key={category} className="bg-muted/30 rounded-lg p-3 text-center hover:bg-muted/50 transition-colors">
+                  <div className="text-lg font-bold text-foreground">{formatNumber(count)}</div>
+                  <div className="text-xs font-medium text-muted-foreground">{category}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
