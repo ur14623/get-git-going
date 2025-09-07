@@ -17,8 +17,6 @@ import {
   Play, 
   Pause, 
   RotateCcw, 
-  EyeOff, 
-  StickyNote,
   Clock,
   Server,
   GitBranch,
@@ -38,6 +36,8 @@ import {
   FileText,
   Download
 } from "lucide-react";
+import { PerformanceStats } from "@/pages/mediations/components/PerformanceStats";
+import { AlertsLogsPanel } from "@/pages/mediations/components/AlertsLogsPanel";
 
 // Mock data for the stream
 const streamData = {
@@ -200,14 +200,6 @@ export function StreamDetailPage() {
                 <RotateCcw className="h-4 w-4" />
                 Restart
               </Button>
-              <Button size="sm" variant="outline" className="gap-2">
-                <EyeOff className="h-4 w-4" />
-                Hide
-              </Button>
-              <Button size="sm" variant="outline" className="gap-2">
-                <StickyNote className="h-4 w-4" />
-                Add Note
-              </Button>
             </div>
           </div>
         </div>
@@ -239,30 +231,31 @@ export function StreamDetailPage() {
                   Uptime
                 </Label>
                 <div className="text-sm font-medium text-foreground">{streamData.uptime}</div>
-                <div className="text-xs text-muted-foreground">Since: {streamData.lastStarted}</div>
               </div>
 
-              {/* Hosts */}
+              {/* Last Started */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Last Started</Label>
+                <div className="text-sm font-medium text-foreground">2024-01-12 23:15:30</div>
+              </div>
+
+              {/* Host Count */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                   <Server className="h-4 w-4" />
-                  Hosts
+                  Host Count
                 </Label>
-                <div className="space-y-1">
-                  {streamData.hosts.map(host => (
-                    <div key={host} className="text-sm font-medium text-foreground">{host}</div>
-                  ))}
-                </div>
+                <div className="text-sm font-medium text-foreground">2 hosts</div>
               </div>
 
-              {/* Version */}
+              {/* Version Information */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                   <GitBranch className="h-4 w-4" />
-                  Version
+                  Version Information
                 </Label>
-                <div className="text-sm font-medium text-foreground">{streamData.currentRevision}</div>
-                <div className="text-xs text-muted-foreground">Based on: {streamData.baseRevision}</div>
+                <div className="text-sm font-medium text-foreground">Current: v2</div>
+                <div className="text-xs text-muted-foreground">Based on: v1</div>
               </div>
             </div>
 
@@ -391,7 +384,7 @@ export function StreamDetailPage() {
 
         {/* Stream Monitoring Tabs */}
         <Tabs defaultValue="stream-live-log" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="stream-live-log" className="gap-2">
               <FileText className="h-4 w-4" />
               Stream Live Log
@@ -403,6 +396,10 @@ export function StreamDetailPage() {
             <TabsTrigger value="statistics" className="gap-2">
               <TrendingUp className="h-4 w-4" />
               Statistics
+            </TabsTrigger>
+            <TabsTrigger value="alerts-logs" className="gap-2">
+              <Bell className="h-4 w-4" />
+              Alerts & Logs
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
@@ -499,47 +496,18 @@ export function StreamDetailPage() {
           </TabsContent>
 
           <TabsContent value="statistics" className="space-y-4">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Last Hour</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">3.6K</div>
-                  <p className="text-xs text-muted-foreground">Events processed</p>
-                </CardContent>
-              </Card>
+            <PerformanceStats 
+              throughputLastHour={520}
+              eventsLastHour={15420}
+              eventsLast24h={348960}
+              eventsLast7d={2443200}
+              errorRate={0.02}
+              retryCount={15}
+            />
+          </TabsContent>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Last 24h</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">87.2K</div>
-                  <p className="text-xs text-muted-foreground">Events processed</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Error Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0.68%</div>
-                  <p className="text-xs text-muted-foreground">Last 24h average</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Retry Success</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">94.2%</div>
-                  <p className="text-xs text-muted-foreground">Successful retries</p>
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="alerts-logs" className="space-y-4">
+            <AlertsLogsPanel />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
