@@ -243,17 +243,58 @@ export function HomePage() {
                 <span>Total Processes: 142</span>
               </div>
               {gitInfo && (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3 bg-muted/30 border border-border">
-                  <div className="flex items-center gap-2">
-                    <GitCommit className="h-4 w-4 text-primary" />
-                    <span className="font-mono text-foreground">{gitInfo.lastCommit.hash}</span>
+                <div className="flex flex-col gap-3 p-4 bg-muted/30 border border-border">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div className="flex items-center gap-2">
+                      <GitCommit className="h-4 w-4 text-primary" />
+                      <span className="font-mono text-foreground">{gitInfo.lastCommit.hash}</span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                      <span className="text-foreground font-medium">{gitInfo.lastCommit.message}</span>
+                      <span>by {gitInfo.lastCommit.author}</span>
+                      <span>{new Date(gitInfo.lastCommit.date).toLocaleDateString()}</span>
+                      <span className="text-xs bg-primary/20 text-primary px-2 py-1 font-medium">{gitInfo.lastCommit.branch}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                    <span className="text-foreground font-medium">{gitInfo.lastCommit.message}</span>
-                    <span>by {gitInfo.lastCommit.author}</span>
-                    <span>{new Date(gitInfo.lastCommit.date).toLocaleDateString()}</span>
-                    <span className="text-xs bg-primary/20 text-primary px-2 py-1 font-medium">{gitInfo.lastCommit.branch}</span>
-                  </div>
+                  
+                  {gitInfo.lastCommit.stats && (
+                    <div className="flex items-center gap-4 text-xs border-t border-border pt-2">
+                      <span className="text-muted-foreground">
+                        <span className="font-medium text-foreground">{gitInfo.lastCommit.stats.totalFiles}</span> files changed
+                      </span>
+                      <span className="text-success">
+                        <span className="font-medium">+{gitInfo.lastCommit.stats.totalAdditions}</span> additions
+                      </span>
+                      <span className="text-destructive">
+                        <span className="font-medium">-{gitInfo.lastCommit.stats.totalDeletions}</span> deletions
+                      </span>
+                    </div>
+                  )}
+                  
+                  {gitInfo.lastCommit.filesChanged && gitInfo.lastCommit.filesChanged.length > 0 && (
+                    <div className="border-t border-border pt-2">
+                      <div className="text-xs font-medium text-muted-foreground mb-2">Files Changed:</div>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {gitInfo.lastCommit.filesChanged.map((file, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs">
+                            <span className={`px-1.5 py-0.5 font-medium ${
+                              file.status === 'added' ? 'bg-success/20 text-success' :
+                              file.status === 'removed' ? 'bg-destructive/20 text-destructive' :
+                              file.status === 'renamed' ? 'bg-warning/20 text-warning' :
+                              'bg-info/20 text-info'
+                            }`}>
+                              {file.status === 'added' ? 'A' :
+                               file.status === 'removed' ? 'D' :
+                               file.status === 'renamed' ? 'R' : 'M'}
+                            </span>
+                            <span className="font-mono text-foreground flex-1">{file.filename}</span>
+                            <span className="text-success">+{file.additions}</span>
+                            <span className="text-destructive">-{file.deletions}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

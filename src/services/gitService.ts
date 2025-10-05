@@ -4,6 +4,18 @@ export interface GitCommit {
   author: string;
   date: string;
   branch: string;
+  filesChanged?: {
+    filename: string;
+    status: 'added' | 'modified' | 'removed' | 'renamed';
+    additions: number;
+    deletions: number;
+    changes: number;
+  }[];
+  stats?: {
+    totalFiles: number;
+    totalAdditions: number;
+    totalDeletions: number;
+  };
 }
 
 export interface GitInfo {
@@ -40,6 +52,31 @@ class GitService {
       const commits = await commitsResponse.json();
       const latestCommit = commits[0];
 
+      // Fetch detailed commit info including files changed
+      const commitDetailResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/commits/${latestCommit.sha}`,
+        { headers }
+      );
+
+      let filesChanged: any[] = [];
+      let stats = { totalFiles: 0, totalAdditions: 0, totalDeletions: 0 };
+
+      if (commitDetailResponse.ok) {
+        const commitDetail = await commitDetailResponse.json();
+        filesChanged = (commitDetail.files || []).map((file: any) => ({
+          filename: file.filename,
+          status: file.status,
+          additions: file.additions || 0,
+          deletions: file.deletions || 0,
+          changes: file.changes || 0,
+        }));
+        stats = {
+          totalFiles: commitDetail.files?.length || 0,
+          totalAdditions: commitDetail.stats?.additions || 0,
+          totalDeletions: commitDetail.stats?.deletions || 0,
+        };
+      }
+
       // Fetch repository info
       const repoResponse = await fetch(
         `https://api.github.com/repos/${owner}/${repo}`,
@@ -62,6 +99,8 @@ class GitService {
           author: latestCommit.commit.author.name,
           date: latestCommit.commit.author.date,
           branch: currentBranch,
+          filesChanged,
+          stats,
         },
         totalCommits: repoInfo.size || 0, // Approximate
         status: 'clean', // We can't easily determine this from GitHub API
@@ -115,6 +154,16 @@ class GitService {
         author: 'Developer',
         date: new Date().toISOString(),
         branch: 'main',
+        filesChanged: [
+          { filename: 'src/pages/HomePage.tsx', status: 'modified', additions: 15, deletions: 3, changes: 18 },
+          { filename: 'src/services/gitService.ts', status: 'modified', additions: 42, deletions: 5, changes: 47 },
+          { filename: 'src/components/GitChanges.tsx', status: 'added', additions: 87, deletions: 0, changes: 87 },
+        ],
+        stats: {
+          totalFiles: 3,
+          totalAdditions: 144,
+          totalDeletions: 8,
+        },
       },
       totalCommits: 127,
       status: 'clean',
