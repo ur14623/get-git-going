@@ -1,33 +1,11 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  Monitor,
-  RefreshCw,
-  Bell,
-  ArrowUp,
-  ArrowDown,
-  Pause,
-  Play,
-  Square,
-  AlertCircle,
-  FileText,
-  EyeOff,
-  StickyNote,
-  Info,
-  Zap,
-  TrendingUp
-} from "lucide-react";
+import { RefreshCw, Activity, AlertTriangle, CheckCircle, XCircle, TrendingUp, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useItems } from './apis/ItemService';
 
-// Stream Data - Professional Mediation Dashboard
+// Stream Data - Professional Dashboard
 const streamsData = [
   {
     id: "stream-001",
@@ -86,185 +64,6 @@ const streamsData = [
   }
 ];
 
-// Alerts Summary
-const alertsSummary = {
-  totalErrors: 22088,
-  totalWarnings: 237,
-  totalInfo: 72
-};
-
-// Peak Streams (highest activity)
-const peakStreams = [
-  {
-    name: "CDR_PROCESSING_MAIN_STREAM",
-    throughput: "5.6K/sec",
-    uptime: "22d 3h",
-    errorRate: "0.02%"
-  },
-  {
-    name: "SFC_ETH_6D_BSS_TO_NOKIA_DWH_STREAM", 
-    throughput: "3.2K/sec",
-    uptime: "14d 8h",
-    errorRate: "1.2%"
-  },
-  {
-    name: "NETWORK_EVENTS_COLLECTOR_STREAM",
-    throughput: "2.1K/sec", 
-    uptime: "8d 15h",
-    errorRate: "0.01%"
-  }
-];
-
-// Mock Flow Data
-const flowsData = [
-  {
-    id: "flow-001",
-    name: "Customer Data ETL",
-    status: "running",
-    health: "healthy",
-    throughput: 3420,
-    queueSize: 125,
-    errorCount: 0,
-    latency: 89,
-    slaCompliance: 99.8,
-    lastUpdated: "2024-01-15T10:30:00Z",
-    nodes: 6,
-    uptime: "14d 8h"
-  },
-  {
-    id: "flow-002", 
-    name: "Billing Mediation",
-    status: "running",
-    health: "degraded",
-    throughput: 2180,
-    queueSize: 892,
-    errorCount: 12,
-    latency: 245,
-    slaCompliance: 94.2,
-    lastUpdated: "2024-01-15T10:29:45Z",
-    nodes: 8,
-    uptime: "6d 12h"
-  },
-  {
-    id: "flow-003",
-    name: "Network Events",
-    status: "running", 
-    health: "healthy",
-    throughput: 5680,
-    queueSize: 45,
-    errorCount: 2,
-    latency: 156,
-    slaCompliance: 98.9,
-    lastUpdated: "2024-01-15T10:30:15Z",
-    nodes: 4,
-    uptime: "22d 3h"
-  },
-  {
-    id: "flow-004",
-    name: "CDR Processing",
-    status: "stopped",
-    health: "failed",
-    throughput: 0,
-    queueSize: 0,
-    errorCount: 45,
-    latency: 0,
-    slaCompliance: 0,
-    lastUpdated: "2024-01-15T09:15:22Z",
-    nodes: 5,
-    uptime: "0h"
-  }
-];
-
-// Mock Node Data
-const nodesData = [
-  {
-    id: "node-001",
-    name: "SftpCollector-01",
-    type: "Collector",
-    status: "active",
-    inputRate: 1240,
-    outputRate: 1238,
-    queueSize: 15,
-    latency: 45,
-    errorCount: 2,
-    flowId: "flow-001"
-  },
-  {
-    id: "node-002", 
-    name: "ValidationBLN-01",
-    type: "Validator",
-    status: "active",
-    inputRate: 1238,
-    outputRate: 1235,
-    queueSize: 8,
-    latency: 12,
-    errorCount: 3,
-    flowId: "flow-001"
-  },
-  {
-    id: "node-003",
-    name: "EnrichmentBLN-01", 
-    type: "Enricher",
-    status: "degraded",
-    inputRate: 2180,
-    outputRate: 2168,
-    queueSize: 245,
-    latency: 156,
-    errorCount: 12,
-    flowId: "flow-002"
-  }
-];
-
-// Performance Chart Data
-const performanceData = [
-  { time: '00:00', throughput: 8500, latency: 120, errors: 15 },
-  { time: '02:00', throughput: 7200, latency: 118, errors: 12 },
-  { time: '04:00', throughput: 6800, latency: 115, errors: 8 },
-  { time: '06:00', throughput: 9200, latency: 125, errors: 18 },
-  { time: '08:00', throughput: 12400, latency: 142, errors: 22 },
-  { time: '10:00', throughput: 11800, latency: 138, errors: 19 },
-  { time: '12:00', throughput: 13200, latency: 155, errors: 25 },
-  { time: '14:00', throughput: 12800, latency: 148, errors: 21 },
-  { time: '16:00', throughput: 14500, latency: 162, errors: 28 },
-  { time: '18:00', throughput: 13900, latency: 159, errors: 24 },
-  { time: '20:00', throughput: 11200, latency: 145, errors: 16 },
-  { time: '22:00', throughput: 9800, latency: 132, errors: 13 }
-];
-
-// Alert Data
-const alertsData = [
-  {
-    id: 1,
-    type: "critical",
-    title: "Flow CDR Processing Stopped",
-    description: "Flow has been down for 45 minutes due to database connection failure",
-    timestamp: "2024-01-15T09:15:22Z",
-    flowId: "flow-004",
-    acknowledged: false
-  },
-  {
-    id: 2,
-    type: "warning", 
-    title: "High Queue Backlog in Billing Mediation",
-    description: "Queue size has exceeded threshold (800+ messages)",
-    timestamp: "2024-01-15T10:20:15Z",
-    flowId: "flow-002",
-    acknowledged: false
-  },
-  {
-    id: 3,
-    type: "info",
-    title: "Scheduled Maintenance Complete",
-    description: "Network Events flow maintenance completed successfully",
-    timestamp: "2024-01-15T08:30:00Z", 
-    flowId: "flow-003",
-    acknowledged: true
-  }
-];
-
-const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--muted))'];
-
-
 export function DashboardPage() {
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -281,15 +80,6 @@ export function DashboardPage() {
     setRefreshing(false);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "RUNNING": return "text-success";
-      case "PARTIAL": return "text-warning";
-      case "STOPPED": return "text-muted-foreground";
-      default: return "text-muted-foreground";
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     const variant = status === "RUNNING" ? "default" :
                    status === "PARTIAL" ? "secondary" : 
@@ -302,171 +92,249 @@ export function DashboardPage() {
     );
   };
 
+  const totalErrors = streamsData.reduce((sum, stream) => sum + stream.errors, 0);
+  const totalWarnings = streamsData.reduce((sum, stream) => sum + stream.warnings, 0);
+  const runningStreams = streamsData.filter(stream => stream.status === "RUNNING").length;
+  const stoppedStreams = streamsData.filter(stream => stream.status === "STOPPED").length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="space-y-6 p-6">
-        {/* Dashboard Header */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary-glow/5 rounded-2xl" />
-          <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6 shadow-card">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Monitor className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-                      Stream Monitoring Dashboard
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      Real-time monitoring and control of mediation streams
-                    </p>
-                  </div>
-                </div>
+    <div className="min-h-screen bg-background">
+      {/* Header Section */}
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="p-6">
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 border border-primary/20">
+                <BarChart3 className="h-5 w-5 text-primary" />
               </div>
-              
-              {/* Dashboard Controls - Removed as requested */}
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="h-9"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                  Refresh
-                </Button>
-                <div className="flex flex-col items-end gap-1 ml-4">
-                  <div className="text-xs text-muted-foreground">
-                    {currentTime.toLocaleDateString()}
-                  </div>
-                  <div className="text-sm font-bold text-primary">
-                    {currentTime.toLocaleTimeString('en-US', { hour12: false })}
-                  </div>
-                </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                <p className="text-muted-foreground">Monitor and manage your data streams</p>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Summary Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card className="bg-success/5 border-success/20 shadow-subtle">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-success/10 rounded-lg">
-                  <Play className="h-5 w-5 text-success" />
-                </div>
+      <div className="px-8 py-8 space-y-8">
+        {/* Key Metrics Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="professional-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold text-success">
-                    {streamsData.filter(stream => stream.status === "RUNNING").length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">All Running Streams</div>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Active Streams</p>
+                  <div className="text-3xl font-bold text-success mt-2">{runningStreams}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {((runningStreams / streamsData.length) * 100).toFixed(1)}% operational
+                  </p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-success" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          <Card className="bg-destructive/5 border-destructive/20 shadow-subtle">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-destructive/10 rounded-lg">
-                  <Square className="h-5 w-5 text-destructive" />
-                </div>
+
+          <Card className="professional-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold text-destructive">
-                    {streamsData.filter(stream => stream.status === "STOPPED").length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">All Stopped Streams</div>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Critical Issues</p>
+                  <div className="text-3xl font-bold text-destructive mt-2">{totalErrors.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Across {streamsData.filter(s => s.errors > 0).length} streams
+                  </p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <XCircle className="h-6 w-6 text-destructive" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          <Card className="bg-primary/5 border-primary/20 shadow-subtle">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Monitor className="h-5 w-5 text-primary" />
-                </div>
+
+          <Card className="professional-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold text-primary">
-                    {streamsData.length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">All Streams</div>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Warnings</p>
+                  <div className="text-3xl font-bold text-warning mt-2">{totalWarnings.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Requires attention
+                  </p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-warning/10 flex items-center justify-center">
+                  <AlertTriangle className="h-6 w-6 text-warning" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="professional-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Total Throughput</p>
+                  <div className="text-3xl font-bold text-primary mt-2">12.7K/s</div>
+                  <p className="text-xs text-success mt-1">
+                    +15% from last hour
+                  </p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Streams Table */}
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-subtle">
+        {/* Stream Management Section */}
+        <Card className="professional-card">
+          <CardHeader className="border-b bg-muted/20">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  Stream Management
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Monitor and control your data processing streams
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <select 
+                  className="h-10 border border-input bg-background px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  defaultValue="all"
+                >
+                  <option value="all">All Status</option>
+                  <option value="RUNNING">Running</option>
+                  <option value="STOPPED">Stopped</option>
+                  <option value="PARTIAL">Partial</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Search streams..."
+                  className="h-10 w-full sm:w-64 border border-input bg-background px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+                />
+              </div>
+            </div>
+          </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-hidden rounded-lg border border-border">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50 border-b border-border sticky top-0 z-10">
-                    <tr>
-                      <th className="text-left font-medium text-muted-foreground px-4 py-3">
-                        Stream Name
-                      </th>
-                      <th className="text-left font-medium text-muted-foreground px-4 py-3">
-                        Errors / Warnings  
-                      </th>
-                      <th className="text-left font-medium text-muted-foreground px-4 py-3">
-                        Instances
-                      </th>
-                      <th className="text-left font-medium text-muted-foreground px-4 py-3">
-                        Status
-                      </th>
-                      <th className="text-left font-medium text-muted-foreground px-4 py-3">
-                        Throughput
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {streamsData.slice(0, 10).map((stream) => (
-                      <tr 
-                        key={stream.id}
-                        className="hover:bg-muted/30 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/streams/${stream.id}`)}
-                      >
-                        <td className="px-4 py-3 font-medium text-foreground">
-                          {stream.name}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className={`font-medium ${stream.errors > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                              {stream.errors.toLocaleString()}
-                            </span>
-                            <span className="text-muted-foreground">/</span>
-                            <span className={`font-medium ${stream.warnings > 0 ? 'text-warning' : 'text-muted-foreground'}`}>
-                              {stream.warnings}
-                            </span>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted/30">
+                  <tr>
+                    <th className="text-left font-semibold text-muted-foreground px-6 py-4 text-xs uppercase tracking-wider">
+                      Stream Details
+                    </th>
+                    <th className="text-left font-semibold text-muted-foreground px-6 py-4 text-xs uppercase tracking-wider">
+                      Health Status
+                    </th>
+                    <th className="text-left font-semibold text-muted-foreground px-6 py-4 text-xs uppercase tracking-wider">
+                      Performance
+                    </th>
+                    <th className="text-left font-semibold text-muted-foreground px-6 py-4 text-xs uppercase tracking-wider">
+                      Uptime
+                    </th>
+                    <th className="text-right font-semibold text-muted-foreground px-6 py-4 text-xs uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {streamsData.map((stream) => (
+                    <tr 
+                      key={stream.id}
+                      className="hover:bg-muted/30 transition-colors group"
+                    >
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className={`h-3 w-3 rounded-full ${
+                            stream.status === 'RUNNING' ? 'bg-success animate-pulse' : 
+                            stream.status === 'PARTIAL' ? 'bg-warning' : 'bg-muted'
+                          }`} />
+                          <div>
+                            <div 
+                              className="font-semibold text-foreground hover:text-primary cursor-pointer transition-colors"
+                              onClick={() => navigate(`/streams/${stream.id}`)}
+                            >
+                              {stream.name}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              Instance {stream.instances} • Last activity: {stream.lastActivity}
+                            </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {stream.instances}
-                        </td>
-                        <td className="px-4 py-3">
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="space-y-2">
                           {getStatusBadge(stream.status)}
-                        </td>
-                        <td className="px-4 py-3 font-medium">
-                          {stream.throughput}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <div className="flex items-center gap-3 text-sm">
+                            {stream.errors > 0 && (
+                              <span className="flex items-center gap-1 text-destructive">
+                                <XCircle className="h-3 w-3" />
+                                {stream.errors.toLocaleString()} errors
+                              </span>
+                            )}
+                            {stream.warnings > 0 && (
+                              <span className="flex items-center gap-1 text-warning">
+                                <AlertTriangle className="h-3 w-3" />
+                                {stream.warnings} warnings
+                              </span>
+                            )}
+                            {stream.errors === 0 && stream.warnings === 0 && (
+                              <span className="flex items-center gap-1 text-success">
+                                <CheckCircle className="h-3 w-3" />
+                                Healthy
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-primary" />
+                            <span className="font-medium text-foreground">{stream.throughput}</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Processing rate
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="text-sm font-medium text-foreground">{stream.uptime}</div>
+                        <div className="text-xs text-muted-foreground">Continuous operation</div>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => navigate(`/streams/${stream.id}`)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          View Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/10">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Showing <span className="font-medium">{streamsData.length}</span> streams</span>
+                <span>•</span>
+                <span className="text-success">{runningStreams} active</span>
+                <span>•</span>
+                <span className="text-muted-foreground">{stoppedStreams} stopped</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Auto-refresh: 30s
               </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Peak Performance Streams section removed as requested */}
       </div>
     </div>
   );

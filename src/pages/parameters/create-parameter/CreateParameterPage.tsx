@@ -85,110 +85,171 @@ export function CreateParameterPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  if (nodesLoading) {
-    return <div className="flex items-center justify-center h-64">Loading nodes...</div>;
-  }
-
-  if (nodesError) {
-    return <div className="flex items-center justify-center h-64 text-red-500">Error loading nodes: {nodesError}</div>;
-  }
+  const handleCancel = () => {
+    navigate("/parameters");
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate("/parameters")}
-          className="flex items-center"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Parameters
-        </Button>
-        <h1 className="text-3xl font-bold">Create New Parameter</h1>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Parameter Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="key">Parameter Key *</Label>
-                <Input
-                  id="key"
-                  value={formData.key}
-                  onChange={(e) => handleInputChange("key", e.target.value)}
-                  placeholder="e.g., timeout, threshold, batch_size"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="default_value">Default Value</Label>
-                <Input
-                  id="default_value"
-                  value={formData.default_value}
-                  onChange={(e) => handleInputChange("default_value", e.target.value)}
-                  placeholder="e.g., 30, true, example_value"
-                />
-              </div>
-            </div>
-
-
-            <div className="space-y-2">
-              <Label htmlFor="datatype">Data Type</Label>
-              <Select 
-                value={formData.datatype} 
-                onValueChange={(value) => handleInputChange("datatype", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select data type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="string">String</SelectItem>
-                  <SelectItem value="integer">Integer</SelectItem>
-                  <SelectItem value="float">Float</SelectItem>
-                  <SelectItem value="boolean">Boolean</SelectItem>
-                  <SelectItem value="date">Date</SelectItem>
-                  <SelectItem value="datetime">DateTime</SelectItem>
-                  <SelectItem value="json">JSON</SelectItem>
-                  <SelectItem value="file">File</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="required"
-                checked={formData.required}
-                onCheckedChange={(checked) => handleInputChange("required", checked)}
-              />
-              <Label htmlFor="required">Required Parameter</Label>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center gap-4">
           <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {isSubmitting ? "Creating..." : "Create Parameter"}
-          </Button>
-          
-          <Button
-            type="button"
             variant="outline"
-            onClick={() => navigate("/parameters")}
+            size="icon"
+            onClick={() => navigate("/devtool?tab=parameters")}
+            className="h-10 w-10"
           >
-            Cancel
+            <ArrowLeft className="h-4 w-4" />
           </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Create New Parameter</h1>
+            <p className="text-muted-foreground mt-1">
+              Define a new configuration parameter for your nodes
+            </p>
+          </div>
         </div>
-      </form>
+
+        <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-3">
+          {/* Main Form */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Basic Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Basic Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="key" className="text-sm font-semibold">
+                    Parameter Key <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="key"
+                    value={formData.key}
+                    onChange={(e) => handleInputChange("key", e.target.value)}
+                    placeholder="e.g., timeout, threshold, batch_size"
+                    className="h-11"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="default_value" className="text-sm font-semibold">
+                    Default Value
+                  </Label>
+                  <Input
+                    id="default_value"
+                    value={formData.default_value}
+                    onChange={(e) => handleInputChange("default_value", e.target.value)}
+                    placeholder="e.g., 30, true, example_value"
+                    className="h-11"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Configuration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Configuration</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="datatype" className="text-sm font-semibold">
+                    Data Type
+                  </Label>
+                  <Select 
+                    value={formData.datatype} 
+                    onValueChange={(value) => handleInputChange("datatype", value)}
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Select data type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="string">String</SelectItem>
+                      <SelectItem value="integer">Integer</SelectItem>
+                      <SelectItem value="float">Float</SelectItem>
+                      <SelectItem value="boolean">Boolean</SelectItem>
+                      <SelectItem value="date">Date</SelectItem>
+                      <SelectItem value="datetime">DateTime</SelectItem>
+                      <SelectItem value="json">JSON</SelectItem>
+                      <SelectItem value="file">File</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between py-2">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold">Required Parameter</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Mark as required if this parameter must have a value
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Label htmlFor="required" className="text-sm font-medium">
+                      {formData.required ? "Required" : "Optional"}
+                    </Label>
+                    <Switch
+                      id="required"
+                      checked={formData.required}
+                      onCheckedChange={(checked) => handleInputChange("required", checked)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-11"
+                >
+                  {isSubmitting ? "Creating..." : "Save"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isSubmitting}
+                  className="w-full h-11"
+                >
+                  Cancel
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Help */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Guidelines</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div>
+                  <p className="font-medium text-foreground">Parameter Key</p>
+                  <p>Use a descriptive, lowercase key with underscores (e.g., max_retries)</p>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Data Types</p>
+                  <p>Choose the appropriate type based on the expected parameter value format</p>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Default Value</p>
+                  <p>Provide a sensible default that works in most scenarios</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

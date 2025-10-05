@@ -12,17 +12,19 @@ import {
   Edge,
   Node,
   BackgroundVariant,
+  MarkerType,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Play, Square, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, Workflow, Network, GitFork, Database, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
-import { NodePalette } from './NodePalette';
-import { PropertiesPanel } from './PropertiesPanel';
+import { CollapsibleNodePalette } from './CollapsibleNodePalette';
+import { EnhancedFlowNode } from './EnhancedFlowNode';
+
 import { flowService, useFlow } from '@/services/flowService';
 import { nodeService } from '@/services/nodeService';
 
@@ -38,15 +40,16 @@ import { DiameterInterfaceNode } from './nodes/DiameterInterfaceNode';
 import { RawBackupNode } from './nodes/RawBackupNode';
 
 const nodeTypes = {
-  sftp_collector: SftpCollectorNode,
-  fdc: FdcNode,
-  asn1_decoder: Asn1DecoderNode,
-  ascii_decoder: AsciiDecoderNode,
-  validation_bln: ValidationBlnNode,
-  enrichment_bln: EnrichmentBlnNode,
-  encoder: EncoderNode,
-  diameter_interface: DiameterInterfaceNode,
-  raw_backup: RawBackupNode,
+  sftp_collector: EnhancedFlowNode,
+  fdc: EnhancedFlowNode,
+  asn1_decoder: EnhancedFlowNode,
+  ascii_decoder: EnhancedFlowNode,
+  validation_bln: EnhancedFlowNode,
+  enrichment_bln: EnhancedFlowNode,
+  encoder: EnhancedFlowNode,
+  diameter_interface: EnhancedFlowNode,
+  raw_backup: EnhancedFlowNode,
+  enhanced: EnhancedFlowNode,
 };
 
 interface RealTimeFlowEditorProps {
@@ -65,6 +68,9 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  
+  // Panel collapse states
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
   
   // Real-time state
   const [flowNodeMap, setFlowNodeMap] = useState<Map<string, string>>(new Map()); // Canvas node ID -> FlowNode ID
@@ -88,14 +94,43 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
           const apiNode = graphData.nodes[i];
           const canvasNodeId = `canvas-${apiNode.id}`;
           
-          // Get node family data for display
-          try {
-            const nodeFamily = await nodeService.getNode(apiNode.node_family);
-            const nodeType = determineNodeType(nodeFamily.name);
+            // Get node family data for display
+            try {
+              const nodeFamily = await nodeService.getNode(apiNode.node_family);
+              
+              // Use subnodes from node family data if available, otherwise fetch from service
+              let subnodes: any[] = [];
+              
+              // First try to get subnodes from the node family's published version
+              if (nodeFamily.published_version?.subnodes && nodeFamily.published_version.subnodes.length > 0) {
+                subnodes = nodeFamily.published_version.subnodes.map((subnode: any) => ({
+                  id: subnode.id,
+                  name: subnode.name,
+                  description: subnode.description || ''
+                }));
+              } else {
+                // Fallback: Fetch from subnode service
+                try {
+                  const { subnodeService } = await import('@/services/subnodeService');
+                  const allSubnodes = await subnodeService.getAllSubnodes();
+                  subnodes = allSubnodes.results
+                    .filter((subnode: any) => subnode.node_family === apiNode.node_family)
+                    .map((subnode: any) => ({
+                      id: subnode.id,
+                      name: subnode.name,
+                      description: subnode.description
+                    }));
+                } catch (subnodeError) {
+                  console.warn('Could not load subnodes for node:', apiNode.node_family, subnodeError);
+                  subnodes = [];
+                }
+              }
+              
+              const nodeType = determineNodeType(nodeFamily.name);
             
             const canvasNode: Node = {
               id: canvasNodeId,
-              type: nodeType,
+              type: 'enhanced',
               position: { x: 100 + i * 250, y: 100 + (i % 3) * 150 },
               data: {
                 label: nodeFamily.name,
@@ -103,7 +138,8 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
                 nodeId: apiNode.node_family,
                 flowNodeId: apiNode.id,
                 selectedSubnode: apiNode.selected_subnode,
-                subnodes: nodeFamily.versions?.[0]?.subnodes || [],
+                subnodes: subnodes,
+                onSubnodeChange: handleSubnodeChange,
               },
             };
             
@@ -114,12 +150,23 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
           }
         }
         
-        // Convert API edges to React Flow edges
+        // Convert API edges to React Flow edges with same styling as FlowPipeline
         const canvasEdges: Edge[] = graphData.edges.map(apiEdge => ({
           id: apiEdge.id,
           source: `canvas-${apiEdge.from_node}`,
           target: `canvas-${apiEdge.to_node}`,
-          type: 'default',
+          type: 'bezier', // Use bezier curves for flexible connections
+          animated: true,
+          style: {
+            stroke: 'hsl(var(--primary))',
+            strokeWidth: 3,
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: 'hsl(var(--primary))',
+            width: 20,
+            height: 20,
+          },
         }));
         
         setNodes(canvasNodes);
@@ -180,13 +227,42 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
 
         // Get node family data for display
         const nodeFamily = await nodeService.getNode(nodeId);
+        
+        // Use subnodes from node family data if available, otherwise fetch from service
+        let subnodes: any[] = [];
+        
+        // First try to get subnodes from the node family's published version
+        if (nodeFamily.published_version?.subnodes && nodeFamily.published_version.subnodes.length > 0) {
+          subnodes = nodeFamily.published_version.subnodes.map((subnode: any) => ({
+            id: subnode.id,
+            name: subnode.name,
+            description: subnode.description || ''
+          }));
+        } else {
+          // Fallback: Fetch from subnode service
+          try {
+            const { subnodeService } = await import('@/services/subnodeService');
+            const allSubnodes = await subnodeService.getAllSubnodes();
+            subnodes = allSubnodes.results
+              .filter((subnode: any) => subnode.node_family === nodeId)
+              .map((subnode: any) => ({
+                id: subnode.id,
+                name: subnode.name,
+                description: subnode.description
+              }));
+          } catch (subnodeError) {
+            console.warn('Could not load subnodes for node:', nodeId, subnodeError);
+            subnodes = [];
+          }
+        }
+        
         const nodeType = determineNodeType(nodeFamily.name);
         
         // Create canvas node
         const canvasNodeId = `canvas-${flowNode.id}`;
         const newNode: Node = {
           id: canvasNodeId,
-          type: nodeType,
+          type: 'enhanced',
           position,
           data: {
             label: nodeFamily.name,
@@ -194,7 +270,8 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
             nodeId: nodeId,
             flowNodeId: flowNode.id,
             selectedSubnode: flowNode.selected_subnode,
-            subnodes: nodeFamily.versions?.[0]?.subnodes || [],
+            subnodes: subnodes,
+            onSubnodeChange: handleSubnodeChange,
           },
         };
 
@@ -231,12 +308,23 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
       
       if (!params.source || !params.target) return;
 
-      // Optimistically update UI first
+      // Optimistically update UI first with bezier style
       const newEdge = {
         id: `temp-${Date.now()}`,
         source: params.source,
         target: params.target,
-        type: 'default',
+        type: 'bezier',
+        animated: true,
+        style: {
+          stroke: 'hsl(var(--primary))',
+          strokeWidth: 3,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: 'hsl(var(--primary))',
+          width: 20,
+          height: 20,
+        },
       };
       setEdges((eds) => [...eds, newEdge]);
       
@@ -258,9 +346,24 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
         });
         console.log('✅ Edge created:', edge);
 
-        // Update edge with real ID
+        // Update edge with real ID and maintain style
         setEdges((eds) => eds.map(e => 
-          e.id === newEdge.id ? { ...e, id: edge.id } : e
+          e.id === newEdge.id ? { 
+            ...e, 
+            id: edge.id,
+            type: 'bezier',
+            animated: true,
+            style: {
+              stroke: 'hsl(var(--primary))',
+              strokeWidth: 3,
+            },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: 'hsl(var(--primary))',
+              width: 20,
+              height: 20,
+            },
+          } : e
         ));
 
         toast({
@@ -285,48 +388,50 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
   );
 
   // 🎯 REAL-TIME FUNCTIONALITY 3: Select SubNode
-  const handleSubnodeChange = useCallback(async (nodeId: string, subnodeId: string) => {
-    console.log('🔄 Changing subnode for node:', nodeId, 'to:', subnodeId);
+  const handleSubnodeChange = useCallback(async (nodeKey: string, subnodeId: string) => {
+    console.log('🔄 Changing subnode for node key:', nodeKey, 'to:', subnodeId);
     
-    const flowNodeId = flowNodeMap.get(nodeId);
-    if (!flowNodeId) {
-      console.error('FlowNode ID not found for canvas node:', nodeId);
+    // Try to resolve flowNodeId from map; if not found, assume nodeKey is already a flowNodeId
+    const resolvedFlowNodeId = flowNodeMap.get(nodeKey) || nodeKey;
+
+    if (!resolvedFlowNodeId) {
+      console.error('FlowNode ID could not be resolved for key:', nodeKey);
       return;
     }
 
-    // Optimistically update UI
+    // Optimistically update UI for both canvas node id and flow node id
     setNodes((nds) =>
-      nds.map((node) =>
-        node.id === nodeId
-          ? { ...node, data: { ...node.data, selectedSubnode: subnodeId } }
-          : node
-      )
+      nds.map((node) => {
+        const matches = node.id === nodeKey || (node.data as any)?.flowNodeId === resolvedFlowNodeId;
+        return matches ? { ...node, data: { ...node.data, selectedSubnode: subnodeId } } : node;
+      })
     );
 
     try {
       // 🚀 Real-time API call: Set subnode immediately
-      const updatedFlowNode = await flowService.setFlowNodeSubnode(flowNodeId, subnodeId);
+      const updatedFlowNode = await flowService.setFlowNodeSubnode(resolvedFlowNodeId, subnodeId);
       console.log('✅ Subnode updated:', updatedFlowNode);
 
       // Update node data with parameters
       setNodes((nds) =>
-        nds.map((node) =>
-          node.id === nodeId
+        nds.map((node) => {
+          const matches = node.id === nodeKey || (node.data as any)?.flowNodeId === resolvedFlowNodeId;
+          return matches
             ? { 
                 ...node, 
                 data: { 
                   ...node.data, 
                   selectedSubnode: subnodeId,
-                  parameters: updatedFlowNode.parameters 
+                  parameters: (updatedFlowNode as any).parameters 
                 } 
               }
-            : node
-        )
+            : node;
+        })
       );
 
       toast({
-        title: "Subnode Selected",
-        description: "Subnode selection updated with parameters.",
+        title: 'Subnode Selected',
+        description: 'Subnode selection updated with parameters.',
       });
 
     } catch (error) {
@@ -334,56 +439,47 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
       
       // Revert optimistic update
       setNodes((nds) =>
-        nds.map((node) =>
-          node.id === nodeId
-            ? { ...node, data: { ...node.data, selectedSubnode: node.data.selectedSubnode } }
-            : node
-        )
+        nds.map((node) => {
+          const matches = node.id === nodeKey || (node.data as any)?.flowNodeId === resolvedFlowNodeId;
+          return matches ? { ...node, data: { ...node.data, selectedSubnode: (node.data as any).selectedSubnode } } : node;
+        })
       );
       
       toast({
-        title: "Update Error",
-        description: "Failed to update subnode selection.",
-        variant: "destructive"
+        title: 'Update Error',
+        description: 'Failed to update subnode selection.',
+        variant: 'destructive'
       });
     }
   }, [flowNodeMap, setNodes, toast]);
 
-  // 🎯 REAL-TIME FUNCTIONALITY 4: Validate Flow
-  const handleValidateFlow = useCallback(async () => {
+  // 🎯 REAL-TIME FUNCTIONALITY 4: Save Flow
+  const handleSaveFlow = useCallback(async () => {
     setIsValidating(true);
-    setValidationErrors([]);
 
     try {
-      // 🚀 Real-time API call: Validate flow immediately
-      const validation = await flowService.validateFlow(flowId);
-      console.log('✅ Flow validation result:', validation);
-
-      if (validation.valid) {
-        toast({
-          title: "Flow Valid",
-          description: "Flow validation passed successfully.",
-        });
-      } else {
-        setValidationErrors(validation.errors || []);
-        toast({
-          title: "Flow Invalid",
-          description: `Found ${validation.errors?.length || 0} validation errors.`,
-          variant: "destructive"
-        });
-      }
+      // 🚀 Real-time API call: Save flow
+      await flowService.updateFlow(flowId, { 
+        name: flowData?.name,
+        description: flowData?.description 
+      });
+      
+      toast({
+        title: "Flow Saved",
+        description: "Flow has been saved successfully.",
+      });
 
     } catch (error) {
-      console.error('❌ Error validating flow:', error);
+      console.error('❌ Error saving flow:', error);
       toast({
-        title: "Validation Error",
-        description: "Failed to validate flow.",
+        title: "Save Error",
+        description: "Failed to save flow.",
         variant: "destructive"
       });
     } finally {
       setIsValidating(false);
     }
-  }, [flowId, toast]);
+  }, [flowId, flowData, toast]);
 
   const onNodeClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
@@ -407,115 +503,160 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
     );
   }
 
+  // Helper to determine back navigation
+  const getBackRoute = () => {
+    const referrer = document.referrer;
+    const currentOrigin = window.location.origin;
+    
+    if (referrer.startsWith(currentOrigin)) {
+      const referrerPath = new URL(referrer).pathname;
+      if (referrerPath.includes('/devtool')) return '/devtool';
+      if (referrerPath.includes('/dashboard')) return '/dashboard';
+      if (referrerPath.includes('/mediations')) return '/mediations';
+    }
+    
+    return '/flows';
+  };
+
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <div className="border-b bg-card p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/flows')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Flows
-            </Button>
-            <div>
-              <h1 className="text-xl font-semibold">
-                {flowData?.name || `Flow ${flowId}`}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Real-time flow editor
-              </p>
+    <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Professional Header */}
+      <div className="bg-card/95 backdrop-blur-sm border-b border-border/60 shadow-sm">
+        <div className="px-8 py-6">
+          {/* Top Section */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center shadow-lg">
+                  <Workflow className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                    {flowData?.name || `Flow ${flowId}`}
+                  </h1>
+                  <div className="px-3 py-1.5 bg-muted border border-border rounded-md">
+                    <span className="text-sm font-semibold text-foreground">v1.0</span>
+                  </div>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 font-medium">
+                    Editing Mode
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {validationErrors.length > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">
+                    {validationErrors.length} error{validationErrors.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+              
+              <Button 
+                onClick={handleSaveFlow}
+                disabled={isValidating}
+                className="px-6 py-2.5 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg hover:shadow-xl transition-all duration-200 gap-2 font-medium"
+              >
+                {isValidating ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {isValidating ? 'Saving...' : 'Save Changes'}
+              </Button>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            {validationErrors.length > 0 && (
-              <Badge variant="destructive" className="gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {validationErrors.length} errors
-              </Badge>
-            )}
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleValidateFlow}
-              disabled={isValidating}
-            >
-              {isValidating ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
-              ) : (
-                <CheckCircle className="h-4 w-4 mr-2" />
-              )}
-              Validate Flow
-            </Button>
-            
-            <Button size="sm" className="gap-2">
-              <Upload className="h-4 w-4" />
-              Deploy
-            </Button>
-          </div>
+          {/* Status Section removed to align version and mode with name */}
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal">
-          {/* Node Palette */}
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-            <NodePalette onAddNode={() => {}} />
-          </ResizablePanel>
-          
-          <ResizableHandle withHandle />
-          
-          {/* Flow Canvas */}
-          <ResizablePanel defaultSize={60} minSize={40}>
-            <div 
-              ref={reactFlowWrapper}
-              className="w-full h-full"
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-            >
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                onNodeClick={onNodeClick}
-                onPaneClick={onPaneClick}
-                nodeTypes={nodeTypes}
-                className="bg-background"
-                fitView
-                fitViewOptions={{ padding: 0.2 }}
-              >
-                <Controls className="bg-card border-border" />
-                <MiniMap 
-                  className="bg-card border-border" 
-                  nodeColor="#8b5cf6"
-                  maskColor="rgba(0, 0, 0, 0.1)"
-                />
-                <Background 
-                  variant={BackgroundVariant.Dots} 
-                  gap={20} 
-                  size={1} 
-                  className="opacity-30" 
-                />
-              </ReactFlow>
-            </div>
-          </ResizablePanel>
-          
-          <ResizableHandle withHandle />
-          
-          {/* Properties Panel */}
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-            <PropertiesPanel 
-              selectedNode={selectedNode}
-              onUpdateNode={() => {}}
-              onDeleteNode={() => {}}
-              flowId={flowId}
+      {/* Professional Main Content */}
+      <div className="flex-1 overflow-hidden relative">
+        {/* Mobile Panel Toggle Button */}
+        <div className="lg:hidden absolute top-4 left-4 z-30 flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
+            className="bg-card/95 backdrop-blur-sm border-border/60 shadow-lg"
+          >
+            <Database className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Overlay for mobile panels */}
+        {!isLeftPanelCollapsed && (
+          <div 
+            className="lg:hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-10"
+            onClick={() => {
+              setIsLeftPanelCollapsed(true);
+            }}
+          />
+        )}
+
+        <div className="h-full flex">
+          {/* Left Sidebar - Node Palette */}
+          <div className={`transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-96'} bg-card/95 backdrop-blur-sm border-r border-border/60 shadow-lg lg:shadow-none h-full`}>
+            <CollapsibleNodePalette 
+              isCollapsed={isLeftPanelCollapsed}
+              onToggleCollapse={setIsLeftPanelCollapsed}
+              onAddNode={async (nodeId) => {
+                const position = { x: Math.random() * 300 + 200, y: Math.random() * 200 + 150 };
+                const event = {
+                  preventDefault: () => {},
+                  dataTransfer: { getData: () => nodeId }
+                } as any;
+                await onDrop(event);
+              }} 
             />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          </div>
+          
+          {/* Center - Canvas */}
+          <div className="flex-1 transition-all duration-300">
+            <div className="h-full relative">
+              {/* Canvas Toolbar - Removed */}
+              
+              <div 
+                ref={reactFlowWrapper}
+                className="w-full h-full"
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+              >
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  onNodeClick={onNodeClick}
+                  onPaneClick={onPaneClick}
+                  nodeTypes={nodeTypes}
+                  className="bg-gradient-to-br from-background/50 to-muted/30"
+                  fitView
+                  fitViewOptions={{ padding: 0.2 }}
+                >
+                  <Controls className="bg-card/95 backdrop-blur-sm border-border/60 shadow-lg [&>button]:bg-transparent [&>button]:border-border/60 [&>button]:hover:bg-muted/50" />
+                  <MiniMap 
+                    className="bg-card/95 backdrop-blur-sm border-border/60 shadow-lg rounded-lg overflow-hidden" 
+                    nodeColor="hsl(var(--primary))"
+                    maskColor="rgba(0, 0, 0, 0.05)"
+                  />
+                  <Background 
+                    variant={BackgroundVariant.Dots} 
+                    gap={24} 
+                    size={1.2} 
+                    className="opacity-40" 
+                    color="hsl(var(--border))"
+                  />
+                </ReactFlow>
+              </div>
+            </div>
+          </div>
+          
+        </div>
       </div>
     </div>
   );

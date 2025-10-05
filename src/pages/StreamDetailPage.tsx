@@ -34,7 +34,8 @@ import {
   Settings,
   Bell,
   FileText,
-  Download
+  Download,
+  Edit
 } from "lucide-react";
 import { PerformanceStats } from "@/pages/mediations/components/PerformanceStats";
 import { AlertsLogsPanel } from "@/pages/mediations/components/AlertsLogsPanel";
@@ -167,39 +168,9 @@ export function StreamDetailPage() {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/dashboard")}
-                className="gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
-              
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">
-                  Dashboard → Streams → {streamData.name}
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  {streamData.name}
-                </h1>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" className="gap-2">
-                <Play className="h-4 w-4" />
-                Start
-              </Button>
-              <Button size="sm" variant="outline" className="gap-2">
-                <Pause className="h-4 w-4" />
-                Stop  
-              </Button>
-              <Button size="sm" variant="outline" className="gap-2">
-                <RotateCcw className="h-4 w-4" />
-                Restart
-              </Button>
+              <h1 className="text-2xl font-bold text-foreground">
+                {streamData.name}
+              </h1>
             </div>
           </div>
         </div>
@@ -215,6 +186,12 @@ export function StreamDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Flow Name */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">Flow Name</Label>
+              <div className="text-lg font-semibold text-foreground">{streamData.name}</div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Status */}
               <div className="space-y-2">
@@ -306,9 +283,9 @@ export function StreamDetailPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Network className="h-5 w-5" />
-                Flow Pipeline
+                Flow Pipeline (Read-only)
               </CardTitle>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
                 <Button
                   variant={viewMode === "graph" ? "default" : "outline"}
                   size="sm"
@@ -569,6 +546,16 @@ export function StreamDetailPage() {
             </Card>
           </TabsContent>
         </Tabs>
+      </div>
+      
+      {/* Fixed Back Button at Bottom Right */}
+      <div className="fixed bottom-6 right-6">
+        <Button
+          onClick={() => navigate("/dashboard")}
+          className="bg-success hover:bg-success/90 text-white"
+        >
+          Back
+        </Button>
       </div>
     </div>
   );

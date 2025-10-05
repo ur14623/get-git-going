@@ -242,9 +242,9 @@ export const flowService = {
     }
   },
 
-  // Update flow
+  // Update flow - using PATCH to preserve existing structure
   async updateFlow(id: string, data: Partial<Flow>): Promise<Flow> {
-    const response = await axiosInstance.put(`flows/${id}/`, data);
+    const response = await axiosInstance.patch(`flows/${id}/`, data);
     return response.data;
   },
 
