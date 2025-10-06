@@ -53,6 +53,22 @@ export interface Subnode {
   last_updated_at: string;
 }
 
+export interface PackageVersion {
+  id: string;
+  node_family: string;
+  node_family_name: string;
+  version: number;
+  package_zip: string | null;
+  package_url: string | null;
+  extracted_path: string | null;
+  extracted_path_display: string | null;
+  entry_point: string | null;
+  package_hash: string | null;
+  state: string;
+  uploaded_by: string;
+  uploaded_at: string;
+}
+
 export interface NodeVersionDetail {
   id: string;
   version: number;
@@ -60,9 +76,9 @@ export interface NodeVersionDetail {
   changelog: string;
   family: string;
   family_name: string;
-  script_url: string;
+  script_url?: string | null;
   parameters: Array<{
-    id: string;
+    id: string | number;
     parameter_id: string;
     key: string;
     value: string;
@@ -76,6 +92,7 @@ export interface NodeVersionDetail {
   }>;
   created_at: string;
   created_by: string;
+  package_version?: PackageVersion | null;
 }
 
 export interface NodeVersion {
@@ -171,6 +188,12 @@ export const nodeService = {
   // Undeploy a version
   async undeployNodeVersion(id: string, version: number): Promise<{ status: string }> {
     const response = await axiosInstance.post(`node-families/${id}/versions/${version}/undeploy/`);
+    return response.data;
+  },
+
+  // Get deployment status
+  async getDeploymentStatus(id: string): Promise<any> {
+    const response = await axiosInstance.get(`node-families/${id}/deployments/status/`);
     return response.data;
   },
 
@@ -352,40 +375,4 @@ export const nodeService = {
     return response.data;
   },
 
-  // Get script content for a specific version
-  async getVersionScript(familyId: string, version: number): Promise<string> {
-    try {
-      // First get the version details to get the script_url
-      const versionDetails = await this.getNodeVersion(familyId, version);
-      
-      if (!versionDetails.script_url) {
-        throw new Error('No script URL available for this version');
-      }
-      
-      console.log('🔍 Attempting to fetch script from:', versionDetails.script_url);
-      
-      // Try to fetch the script content directly from the script_url
-      const response = await fetch(versionDetails.script_url);
-      
-      if (!response.ok) {
-        console.error('❌ Script fetch failed:', response.status, response.statusText);
-        
-        if (response.status === 404) {
-          // If direct access fails, this means the backend URL routing isn't configured
-          // to serve script files. We need to inform the user about this backend issue.
-          throw new Error('Script file not accessible - backend server needs to configure URL routing for script files');
-        }
-        
-        throw new Error(`Failed to fetch script: ${response.status} ${response.statusText}`);
-      }
-      
-      const scriptContent = await response.text();
-      console.log('✅ Script content fetched successfully');
-      return scriptContent;
-      
-    } catch (error) {
-      console.error('❌ Error fetching script content:', error);
-      throw error;
-    }
-  }
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -13,7 +14,6 @@ import { PropertiesSection } from "./components/PropertiesSection";
 import { SubnodesSection } from "./components/SubnodesSection";
 import { VersionHistoryModal } from "./components/VersionHistoryModal";
 import { CreateVersionModal } from "./components/CreateVersionModal";
-import { FileText } from "lucide-react";
 import axios from 'axios';
 import { LoadingSpinner } from "@/components/ui/loading";
 
@@ -38,11 +38,6 @@ export function NodeDetailPage() {
 
   // Parameters management
   const [nodeParameters, setNodeParameters] = useState<any[]>([]);
-  
-  // Script content management
-  const [scriptContent, setScriptContent] = useState<string>("");
-  const [scriptLoading, setScriptLoading] = useState(false);
-  const [scriptError, setScriptError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchNode = async () => {
@@ -109,45 +104,6 @@ export function NodeDetailPage() {
     }
   };
 
-  // Fetch script content from version
-  const fetchScriptContent = async (familyId: string, versionNumber: number) => {
-    if (!familyId || !versionNumber) return;
-    
-    setScriptLoading(true);
-    setScriptError(null);
-    
-    try {
-      const scriptContent = await nodeService.getVersionScript(familyId, versionNumber);
-      setScriptContent(scriptContent);
-    } catch (err: any) {
-      console.error('Error fetching script content:', err);
-      
-      let errorMessage = err.message || 'Failed to load script content';
-      
-      // Handle specific error cases
-      if (err.message?.includes('404')) {
-        errorMessage = 'Script file not found';
-      } else if (err.message?.includes('403')) {
-        errorMessage = 'Access denied to script file';
-      } else if (err.message?.includes('500')) {
-        errorMessage = 'Server error while fetching script';
-      }
-      
-      setScriptError(errorMessage);
-      setScriptContent('');
-    } finally {
-      setScriptLoading(false);
-    }
-  };
-
-  // Effect to fetch script content when selected version changes
-  useEffect(() => {
-    if (selectedVersion) {
-      fetchScriptContent(selectedVersion.family, selectedVersion.version);
-    } else if (node?.published_version) {
-      fetchScriptContent(node.published_version.family, node.published_version.version);
-    }
-  }, [selectedVersion, node?.published_version]);
 
   // Event handlers
   const handleEditVersion = () => {
@@ -420,7 +376,7 @@ export function NodeDetailPage() {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="parameters">Parameters</TabsTrigger>
           <TabsTrigger value="subnodes">Subnodes</TabsTrigger>
-          <TabsTrigger value="script">Script</TabsTrigger>
+          <TabsTrigger value="package">Package Version</TabsTrigger>
         </TabsList>
         
         <TabsContent value="parameters" className="space-y-4">
@@ -436,61 +392,78 @@ export function NodeDetailPage() {
           />
         </TabsContent>
         
-        <TabsContent value="script" className="space-y-4">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Python Script</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  Version {selectedVersion?.version || node.published_version?.version}
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    if (scriptContent) {
-                      navigator.clipboard.writeText(scriptContent);
-                      toast({
-                        title: "Code copied!",
-                        description: "Script content has been copied to clipboard",
-                      });
-                    }
-                  }}
-                  disabled={!scriptContent || scriptLoading || !!scriptError}
-                  className="gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  Copy
-                </Button>
+        <TabsContent value="package" className="space-y-4">
+          {selectedVersion?.package_version ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Package ID</label>
+                  <p className="text-sm font-mono">{selectedVersion.package_version.id}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Version</label>
+                  <p className="text-sm">{selectedVersion.package_version.version}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">State</label>
+                  <Badge variant={selectedVersion.package_version.state === 'published' ? 'default' : 'secondary'}>
+                    {selectedVersion.package_version.state}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Entry Point</label>
+                  <p className="text-sm font-mono">{selectedVersion.package_version.entry_point || '—'}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Uploaded By</label>
+                  <p className="text-sm">{selectedVersion.package_version.uploaded_by || '—'}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Uploaded At</label>
+                  <p className="text-sm">{new Date(selectedVersion.package_version.uploaded_at).toLocaleString()}</p>
+                </div>
+                
+                {selectedVersion.package_version.package_url && (
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium text-muted-foreground">Package URL</label>
+                    <a 
+                      href={selectedVersion.package_version.package_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline break-all block"
+                    >
+                      {selectedVersion.package_version.package_url}
+                    </a>
+                  </div>
+                )}
+                
+                {selectedVersion.package_version.extracted_path_display && (
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium text-muted-foreground">Extracted Path</label>
+                    <p className="text-sm font-mono">{selectedVersion.package_version.extracted_path_display}</p>
+                  </div>
+                )}
+                
+                {selectedVersion.package_version.package_hash && (
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium text-muted-foreground">Package Hash</label>
+                    <p className="text-xs font-mono bg-muted p-2 rounded break-all">
+                      {selectedVersion.package_version.package_hash}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="relative">
-              {scriptLoading ? (
-                <div className="flex items-center justify-center h-32 bg-muted rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
-                    <span className="text-sm text-muted-foreground">Loading script...</span>
-                  </div>
-                </div>
-              ) : scriptError ? (
-                <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-lg">
-                  <div className="font-medium">Script Loading Error</div>
-                  <div className="text-sm mt-1">{scriptError}</div>
-                  {scriptError.includes('backend server needs to configure URL routing') && (
-                    <div className="text-xs mt-2 text-muted-foreground">
-                      The backend server needs to add URL patterns to serve script files from the /node_scripts/ path.
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm max-h-96 overflow-y-auto">
-                  <code className="language-python whitespace-pre-wrap">
-                    {scriptContent || "No script content available"}
-                  </code>
-                </pre>
-              )}
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No package version information available
             </div>
-          </div>
+          )}
         </TabsContent>
       </Tabs>
 
