@@ -6,19 +6,24 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 
-// Mock interface - replace with actual API types
+const API_BASE_URL = "http://127.0.0.1:8000/api";
+
 export interface NodePackageDetail {
   id: string;
+  node_family: string;
   node_family_name: string;
-  version: string;
-  version_note: string;
-  state: "Draft" | "Published" | "Archived";
+  version: number;
+  package_zip: string | null;
+  package_url: string | null;
+  extracted_path: string | null;
+  extracted_path_display: string | null;
+  entry_point: string | null;
+  package_hash: string | null;
+  state: string;
   uploaded_by: string;
   uploaded_at: string;
-  entry_point: string;
-  sha256_hash: string;
-  extracted_path?: string;
 }
 
 export function NodePackageDetailPage() {
@@ -32,21 +37,8 @@ export function NodePackageDetailPage() {
   useEffect(() => {
     const fetchPackageDetail = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await nodePackageService.getPackageDetail(packageId);
-        const mockData: NodePackageDetail = {
-          id: packageId || "1",
-          node_family_name: "Data Processor",
-          version: "1.0.0",
-          version_note: "Initial release with basic data processing capabilities",
-          state: "Published",
-          uploaded_by: "john.doe@example.com",
-          uploaded_at: "2025-01-15T10:30:00Z",
-          entry_point: "main.py",
-          sha256_hash: "a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b4",
-          extracted_path: "/packages/data-processor/1.0.0"
-        };
-        setPackageDetail(mockData);
+        const response = await axios.get<NodePackageDetail>(`${API_BASE_URL}/node-packages/${packageId}/`);
+        setPackageDetail(response.data);
       } catch (error) {
         console.error("Failed to fetch package detail:", error);
         toast({
@@ -75,12 +67,13 @@ export function NodePackageDetailPage() {
   };
 
   const getStateBadgeVariant = (state: string) => {
-    switch (state) {
-      case "Published":
+    const lowerState = state.toLowerCase();
+    switch (lowerState) {
+      case "published":
         return "default";
-      case "Draft":
+      case "draft":
         return "secondary";
-      case "Archived":
+      case "archived":
         return "outline";
       default:
         return "default";
@@ -147,19 +140,19 @@ export function NodePackageDetailPage() {
               <Label className="text-muted-foreground">State</Label>
               <div>
                 <Badge variant={getStateBadgeVariant(packageDetail.state)}>
-                  {packageDetail.state}
+                  {packageDetail.state.charAt(0).toUpperCase() + packageDetail.state.slice(1)}
                 </Badge>
               </div>
             </div>
 
             <div className="space-y-2">
               <Label className="text-muted-foreground">Entry Point</Label>
-              <p className="font-mono text-sm">{packageDetail.entry_point}</p>
+              <p className="font-mono text-sm">{packageDetail.entry_point || "—"}</p>
             </div>
 
             <div className="space-y-2">
               <Label className="text-muted-foreground">Uploaded By</Label>
-              <p>{packageDetail.uploaded_by}</p>
+              <p>{packageDetail.uploaded_by || "—"}</p>
             </div>
 
             <div className="space-y-2">
@@ -167,24 +160,35 @@ export function NodePackageDetailPage() {
               <p>{formatDate(packageDetail.uploaded_at)}</p>
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label className="text-muted-foreground">SHA256 Hash</Label>
-              <p className="font-mono text-xs break-all bg-muted p-2 rounded">
-                {packageDetail.sha256_hash}
-              </p>
-            </div>
-
-            {packageDetail.extracted_path && (
+            {packageDetail.package_url && (
               <div className="space-y-2 md:col-span-2">
-                <Label className="text-muted-foreground">Extracted Path</Label>
-                <p className="font-mono text-sm">{packageDetail.extracted_path}</p>
+                <Label className="text-muted-foreground">Package URL</Label>
+                <a 
+                  href={packageDetail.package_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-mono text-sm text-primary hover:underline break-all"
+                >
+                  {packageDetail.package_url}
+                </a>
               </div>
             )}
-          </div>
 
-          <div className="space-y-2">
-            <Label className="text-muted-foreground">Version Note</Label>
-            <p className="text-sm leading-relaxed">{packageDetail.version_note}</p>
+            {packageDetail.package_hash && (
+              <div className="space-y-2 md:col-span-2">
+                <Label className="text-muted-foreground">Package Hash</Label>
+                <p className="font-mono text-xs break-all bg-muted p-2 rounded">
+                  {packageDetail.package_hash}
+                </p>
+              </div>
+            )}
+
+            {packageDetail.extracted_path_display && (
+              <div className="space-y-2 md:col-span-2">
+                <Label className="text-muted-foreground">Extracted Path</Label>
+                <p className="font-mono text-sm">{packageDetail.extracted_path_display}</p>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4 pt-4">

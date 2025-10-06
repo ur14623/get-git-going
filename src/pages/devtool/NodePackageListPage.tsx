@@ -19,16 +19,24 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import axios from "axios";
 
-// Mock interface - replace with actual API types
+const API_BASE_URL = "http://127.0.0.1:8000/api";
+
 export interface NodePackage {
   id: string;
+  node_family: string;
   node_family_name: string;
-  version: string;
-  state: "Draft" | "Published" | "Archived";
+  version: number;
+  package_zip: string | null;
+  package_url: string | null;
+  extracted_path: string | null;
+  extracted_path_display: string | null;
+  entry_point: string | null;
+  package_hash: string | null;
+  state: string;
   uploaded_by: string;
   uploaded_at: string;
-  entry_point: string;
 }
 
 export function NodePackageListPage() {
@@ -43,33 +51,11 @@ export function NodePackageListPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [packageToDelete, setPackageToDelete] = useState<string | null>(null);
 
-  // Mock data - replace with actual API call
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await nodePackageService.getAllPackages();
-        const mockData: NodePackage[] = [
-          {
-            id: "1",
-            node_family_name: "Data Processor",
-            version: "1.0.0",
-            state: "Published",
-            uploaded_by: "john.doe@example.com",
-            uploaded_at: "2025-01-15T10:30:00Z",
-            entry_point: "main.py"
-          },
-          {
-            id: "2",
-            node_family_name: "Data Validator",
-            version: "2.1.3",
-            state: "Draft",
-            uploaded_by: "jane.smith@example.com",
-            uploaded_at: "2025-01-20T14:20:00Z",
-            entry_point: "validator.py"
-          },
-        ];
-        setPackages(mockData);
+        const response = await axios.get<NodePackage[]>(`${API_BASE_URL}/node-packages/`);
+        setPackages(response.data);
       } catch (error) {
         console.error("Failed to fetch node packages:", error);
         toast({
@@ -106,8 +92,7 @@ export function NodePackageListPage() {
     if (!packageToDelete) return;
 
     try {
-      // TODO: Replace with actual API call
-      // await nodePackageService.deletePackage(packageToDelete);
+      await axios.delete(`${API_BASE_URL}/node-packages/${packageToDelete}/`);
       setPackages(packages.filter(pkg => pkg.id !== packageToDelete));
       toast({
         title: "Success",
@@ -141,12 +126,13 @@ export function NodePackageListPage() {
   };
 
   const getStateBadgeVariant = (state: string) => {
-    switch (state) {
-      case "Published":
+    const lowerState = state.toLowerCase();
+    switch (lowerState) {
+      case "published":
         return "default";
-      case "Draft":
+      case "draft":
         return "secondary";
-      case "Archived":
+      case "archived":
         return "outline";
       default:
         return "default";
@@ -216,12 +202,12 @@ export function NodePackageListPage() {
                       <TableCell>{pkg.version}</TableCell>
                       <TableCell>
                         <Badge variant={getStateBadgeVariant(pkg.state)}>
-                          {pkg.state}
+                          {pkg.state.charAt(0).toUpperCase() + pkg.state.slice(1)}
                         </Badge>
                       </TableCell>
-                      <TableCell>{pkg.uploaded_by}</TableCell>
+                      <TableCell>{pkg.uploaded_by || "—"}</TableCell>
                       <TableCell>{formatDate(pkg.uploaded_at)}</TableCell>
-                      <TableCell className="font-mono text-sm">{pkg.entry_point}</TableCell>
+                      <TableCell className="font-mono text-sm">{pkg.entry_point || "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <TooltipProvider>
