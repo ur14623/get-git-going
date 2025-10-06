@@ -395,73 +395,134 @@ export function NodeDetailPage() {
         <TabsContent value="package" className="space-y-4">
           {selectedVersion?.package_version ? (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Package ID</label>
-                  <p className="text-sm font-mono">{selectedVersion.package_version.id}</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Version</label>
-                  <p className="text-sm">{selectedVersion.package_version.version}</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">State</label>
-                  <Badge variant={selectedVersion.package_version.state === 'published' ? 'default' : 'secondary'}>
-                    {selectedVersion.package_version.state}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Entry Point</label>
-                  <p className="text-sm font-mono">{selectedVersion.package_version.entry_point || '—'}</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Uploaded By</label>
-                  <p className="text-sm">{selectedVersion.package_version.uploaded_by || '—'}</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Uploaded At</label>
-                  <p className="text-sm">{new Date(selectedVersion.package_version.uploaded_at).toLocaleString()}</p>
-                </div>
-                
-                {selectedVersion.package_version.package_url && (
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-muted-foreground">Package URL</label>
-                    <a 
-                      href={selectedVersion.package_version.package_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline break-all block"
-                    >
-                      {selectedVersion.package_version.package_url}
-                    </a>
-                  </div>
-                )}
-                
-                {selectedVersion.package_version.extracted_path_display && (
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-muted-foreground">Extracted Path</label>
-                    <p className="text-sm font-mono">{selectedVersion.package_version.extracted_path_display}</p>
-                  </div>
-                )}
-                
-                {selectedVersion.package_version.package_hash && (
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-muted-foreground">Package Hash</label>
-                    <p className="text-xs font-mono bg-muted p-2 rounded break-all">
-                      {selectedVersion.package_version.package_hash}
+              {/* Header Card */}
+              <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border border-primary/20 rounded-lg p-6">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-2xl font-semibold">Package Version {selectedVersion.package_version.version}</h3>
+                      <Badge 
+                        variant={selectedVersion.package_version.state === 'published' ? 'default' : 'secondary'}
+                        className="text-sm"
+                      >
+                        {selectedVersion.package_version.state}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Node Family: {selectedVersion.package_version.node_family_name}
                     </p>
                   </div>
-                )}
+                </div>
               </div>
+
+              {/* Main Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Package ID Card */}
+                <div className="bg-card border rounded-lg p-5 space-y-2 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    <span className="text-sm font-medium">Package ID</span>
+                  </div>
+                  <p className="text-sm font-mono text-foreground/90 break-all">{selectedVersion.package_version.id}</p>
+                </div>
+
+                {/* Entry Point Card */}
+                <div className="bg-card border rounded-lg p-5 space-y-2 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    <span className="text-sm font-medium">Entry Point</span>
+                  </div>
+                  <p className="text-sm font-mono text-foreground/90">{selectedVersion.package_version.entry_point || '—'}</p>
+                </div>
+
+                {/* Uploaded By Card */}
+                <div className="bg-card border rounded-lg p-5 space-y-2 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="text-sm font-medium">Uploaded By</span>
+                  </div>
+                  <p className="text-sm text-foreground/90">{selectedVersion.package_version.uploaded_by || 'System'}</p>
+                </div>
+
+                {/* Upload Date Card */}
+                <div className="bg-card border rounded-lg p-5 space-y-2 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm font-medium">Uploaded At</span>
+                  </div>
+                  <p className="text-sm text-foreground/90">{new Date(selectedVersion.package_version.uploaded_at).toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Package URL Card */}
+              {selectedVersion.package_version.package_url && (
+                <div className="bg-card border rounded-lg p-5 space-y-3 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="text-sm font-medium">Package URL</span>
+                  </div>
+                  <a 
+                    href={selectedVersion.package_version.package_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline break-all flex items-center gap-2 group"
+                  >
+                    <span>{selectedVersion.package_version.package_url}</span>
+                    <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+              )}
+
+              {/* Extracted Path Card */}
+              {selectedVersion.package_version.extracted_path_display && (
+                <div className="bg-card border rounded-lg p-5 space-y-3 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    <span className="text-sm font-medium">Extracted Path</span>
+                  </div>
+                  <p className="text-sm font-mono bg-muted/50 px-3 py-2 rounded border text-foreground/90">
+                    {selectedVersion.package_version.extracted_path_display}
+                  </p>
+                </div>
+              )}
+
+              {/* Package Hash Card */}
+              {selectedVersion.package_version.package_hash && (
+                <div className="bg-card border rounded-lg p-5 space-y-3 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span className="text-sm font-medium">Package Hash (SHA-256)</span>
+                  </div>
+                  <p className="text-xs font-mono bg-muted/50 px-3 py-2 rounded border break-all text-foreground/90">
+                    {selectedVersion.package_version.package_hash}
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No package version information available
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+              <p className="text-muted-foreground">No package version information available</p>
             </div>
           )}
         </TabsContent>
