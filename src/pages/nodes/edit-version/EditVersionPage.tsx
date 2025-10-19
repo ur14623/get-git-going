@@ -33,8 +33,8 @@ export function EditVersionPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedParametersToAdd, setSelectedParametersToAdd] = useState<string[]>([]);
   
-  // Script management
-  const [scriptFile, setScriptFile] = useState<File | null>(null);
+  // Package management
+  const [packageFile, setPackageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -133,27 +133,27 @@ export function EditVersionPage() {
     }
   };
 
-  const handleScriptUpload = async () => {
-    if (!id || !scriptFile) return;
+  const handlePackageUpload = async () => {
+    if (!id || !packageFile) return;
     
     try {
       setUploading(true);
-      await nodeService.uploadVersionScript(id, parseInt(version), scriptFile);
+      await nodeService.uploadNodePackage(id, packageFile, `Version ${version} package update`);
       
       // Refresh node version data
       const updatedVersion = await nodeService.getNodeVersionDetail(id, parseInt(version));
       setNodeVersion(updatedVersion);
-      setScriptFile(null);
+      setPackageFile(null);
       
       toast({
-        title: "Script Updated",
-        description: "Script uploaded successfully",
+        title: "Package Updated",
+        description: "Node package uploaded successfully",
       });
     } catch (err: any) {
-      console.error("Error uploading script:", err);
+      console.error("Error uploading package:", err);
       toast({
         title: "Error",
-        description: "Failed to upload script",
+        description: "Failed to upload node package",
         variant: "destructive"
       });
     } finally {
@@ -161,7 +161,7 @@ export function EditVersionPage() {
     }
   };
 
-  const handleDownloadScript = async () => {
+  const handleDownloadPackage = async () => {
     if (!nodeVersion?.script_url) return;
     
     try {
@@ -170,13 +170,13 @@ export function EditVersionPage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${nodeVersion.family_name}_v${nodeVersion.version}.py`;
+      link.download = `${nodeVersion.family_name}_v${nodeVersion.version}.zip`;
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {
       toast({
         title: "Error",
-        description: "Failed to download script",
+        description: "Failed to download package",
         variant: "destructive"
       });
     }
@@ -226,7 +226,7 @@ export function EditVersionPage() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold">Edit Node Version</h1>
-          <p className="text-muted-foreground">Manage parameters and script for this version</p>
+          <p className="text-muted-foreground">Manage parameters and node package for this version</p>
         </div>
       </div>
 
@@ -260,13 +260,13 @@ export function EditVersionPage() {
             <p className="text-base">{nodeVersion.changelog || 'No changelog available'}</p>
           </div>
           <div className="col-span-2">
-            <Label className="text-sm font-medium text-muted-foreground">Script URL</Label>
+            <Label className="text-sm font-medium text-muted-foreground">Package URL</Label>
             <div className="flex items-center gap-2">
               <code className="text-sm bg-muted px-2 py-1 rounded flex-1">
-                {nodeVersion.script_url || 'No script uploaded'}
+                {nodeVersion.script_url || 'No package uploaded'}
               </code>
               {nodeVersion.script_url && (
-                <Button variant="outline" size="sm" onClick={handleDownloadScript}>
+                <Button variant="outline" size="sm" onClick={handleDownloadPackage}>
                   <Download className="h-4 w-4" />
                 </Button>
               )}
@@ -279,7 +279,7 @@ export function EditVersionPage() {
       <Tabs defaultValue="parameters" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="parameters">Parameters</TabsTrigger>
-          <TabsTrigger value="script">Script</TabsTrigger>
+          <TabsTrigger value="script">Node Package</TabsTrigger>
         </TabsList>
         
         {/* Parameters Tab */}
@@ -463,22 +463,22 @@ export function EditVersionPage() {
           </Card>
         </TabsContent>
 
-        {/* Script Tab */}
+        {/* Node Package Tab */}
         <TabsContent value="script" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Script Management</CardTitle>
-              <CardDescription>Upload or download the Python script for this version</CardDescription>
+              <CardTitle>Node Package Management</CardTitle>
+              <CardDescription>Upload or download the node package (.zip) for this version</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>Current Script</Label>
+                <Label>Current Package</Label>
                 <div className="flex items-center gap-2 mt-2">
                   <code className="text-sm bg-muted px-2 py-1 rounded flex-1">
-                    {nodeVersion.script_url || 'No script uploaded'}
+                    {nodeVersion.script_url || 'No package uploaded'}
                   </code>
                   {nodeVersion.script_url && (
-                    <Button variant="outline" size="sm" onClick={handleDownloadScript}>
+                    <Button variant="outline" size="sm" onClick={handleDownloadPackage}>
                       <Download className="h-4 w-4 mr-2" />
                       Download
                     </Button>
@@ -487,23 +487,23 @@ export function EditVersionPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Upload New Script</Label>
+                <Label>Upload New Package</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="file"
-                    accept=".py"
-                    onChange={(e) => setScriptFile(e.target.files?.[0] || null)}
+                    accept=".zip"
+                    onChange={(e) => setPackageFile(e.target.files?.[0] || null)}
                   />
                   <Button 
-                    onClick={handleScriptUpload}
-                    disabled={!scriptFile || uploading}
+                    onClick={handlePackageUpload}
+                    disabled={!packageFile || uploading}
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     {uploading ? 'Uploading...' : 'Upload'}
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Only Python (.py) files are supported
+                  Only ZIP (.zip) files are supported
                 </p>
               </div>
             </CardContent>

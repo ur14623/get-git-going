@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { ChevronLeft, Save, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -22,6 +23,8 @@ export function ReleaseNotePage() {
   
   const [releaseNote, setReleaseNote] = useState<ReleaseNote | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedNotes, setEditedNotes] = useState("");
 
   useEffect(() => {
     const fetchReleaseNote = async () => {
@@ -73,6 +76,7 @@ To upgrade from previous versions:
 For more information, visit the documentation or contact support.`
         };
         setReleaseNote(mockData);
+        setEditedNotes(mockData.release_notes);
       } catch (error) {
         console.error("Failed to fetch release notes:", error);
         toast({
@@ -111,9 +115,36 @@ For more information, visit the documentation or contact support.`
     }
   };
 
+  const handleSave = async () => {
+    try {
+      // TODO: Replace with actual API call
+      // await nodePackageService.updateReleaseNotes(packageId, editedNotes);
+      
+      setReleaseNote(prev => prev ? { ...prev, release_notes: editedNotes } : null);
+      setIsEditing(false);
+      
+      toast({
+        title: "Success",
+        description: "Release notes updated successfully"
+      });
+    } catch (error) {
+      console.error("Failed to save release notes:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save release notes",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedNotes(releaseNote?.release_notes || "");
+    setIsEditing(false);
+  };
+
   if (loading) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="w-full px-8 py-8">
         <Card>
           <CardContent className="py-8 text-center">
             Loading release notes...
@@ -125,7 +156,7 @@ For more information, visit the documentation or contact support.`
 
   if (!releaseNote) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="w-full px-8 py-8">
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             Release notes not found
@@ -136,7 +167,7 @@ For more information, visit the documentation or contact support.`
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="w-full px-8 py-8 space-y-6">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -158,6 +189,12 @@ For more information, visit the documentation or contact support.`
             Released on {formatDate(releaseNote.uploaded_at)}
           </p>
         </div>
+        {!isEditing && (
+          <Button onClick={() => setIsEditing(true)}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit Release Notes
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -165,26 +202,48 @@ For more information, visit the documentation or contact support.`
           <CardTitle>Release Notes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
-              {releaseNote.release_notes}
-            </pre>
-          </div>
-          
-          <div className="flex gap-4 pt-6 mt-6 border-t">
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/devtool/node-packages/${packageId}`)}
-            >
-              Back to Package Details
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/devtool")}
-            >
-              Back to List
-            </Button>
-          </div>
+          {isEditing ? (
+            <div className="space-y-4">
+              <Textarea
+                value={editedNotes}
+                onChange={(e) => setEditedNotes(e.target.value)}
+                className="min-h-[500px] font-mono text-sm"
+                placeholder="Enter release notes in Markdown format..."
+              />
+              <div className="flex gap-4">
+                <Button onClick={handleSave}>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </Button>
+                <Button variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                  {releaseNote.release_notes}
+                </pre>
+              </div>
+              
+              <div className="flex gap-4 pt-6 mt-6 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/devtool/node-packages/${packageId}`)}
+                >
+                  Back to Package Details
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/devtool")}
+                >
+                  Back to List
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

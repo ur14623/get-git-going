@@ -105,7 +105,7 @@ export function NodePackageDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="w-full px-8 py-8 space-y-6">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"

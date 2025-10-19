@@ -16,32 +16,30 @@ export function CreateNodePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [nodeName, setNodeName] = useState("");
-  const [nodeDescription, setNodeDescription] = useState("");
-  const [mediationType, setMediationType] = useState("");
-  const [nodeType, setNodeType] = useState("");
-  const [hasSubnodes, setHasSubnodes] = useState(false);
-  const [scriptFile, setScriptFile] = useState<File | null>(null);
+  const [familyName, setFamilyName] = useState("");
+  const [description, setDescription] = useState("");
+  const [packageZip, setPackageZip] = useState<File | null>(null);
+  const [versionNote, setVersionNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setScriptFile(file);
+      setPackageZip(file);
     }
   };
 
   const handleSave = async () => {
-    if (!nodeName.trim()) {
+    if (!familyName.trim()) {
       toast({
         title: "Error",
-        description: "Node name is required",
+        description: "Node family name is required",
         variant: "destructive"
       });
       return;
     }
 
-    if (!nodeDescription.trim()) {
+    if (!description.trim()) {
       toast({
         title: "Error",
         description: "Description is required",
@@ -50,28 +48,10 @@ export function CreateNodePage() {
       return;
     }
 
-    if (!mediationType) {
-      toast({
-        title: "Error",
-        description: "Mediation type is required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!nodeType) {
-      toast({
-        title: "Error",
-        description: "Node type is required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!scriptFile) {
+    if (!packageZip) {
       toast({
         title: "Error", 
-        description: "Script file is required",
+        description: "Package zip file is required",
         variant: "destructive"
       });
       return;
@@ -81,23 +61,27 @@ export function CreateNodePage() {
     try {
       // Step 1: Create Node Family
       const newNodeFamily = await nodeService.createNodeFamily({
-        name: nodeName,
-        description: nodeDescription,
+        name: familyName,
+        description: description,
         created_by: "Efrem"
       });
 
-      // Step 2: Create Initial Version (v1)
+      // Step 2: Upload Node Package
+      const packageData = await nodeService.uploadNodePackage(
+        newNodeFamily.id,
+        packageZip,
+        versionNote || "Initial package upload"
+      );
+
+      // Step 3: Create Node Version
       await nodeService.createNodeVersion(newNodeFamily.id, {
         version: 1,
-        changelog: "initial version"
+        changelog: "version one"
       });
-
-      // Step 3: Upload Script for v1
-      await nodeService.uploadVersionScript(newNodeFamily.id, 1, scriptFile);
 
       toast({
         title: "Success",
-        description: "Node created and script uploaded."
+        description: "Node family created successfully with initial package and version."
       });
       
       navigate("/nodes");
@@ -153,27 +137,27 @@ export function CreateNodePage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="nodeName" className="text-sm font-semibold">
-                    Node Name <span className="text-destructive">*</span>
+                  <Label htmlFor="familyName" className="text-sm font-semibold">
+                    Node Family Name <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id="nodeName"
-                    value={nodeName}
-                    onChange={(e) => setNodeName(e.target.value)}
-                    placeholder="Enter a descriptive node name"
+                    id="familyName"
+                    value={familyName}
+                    onChange={(e) => setFamilyName(e.target.value)}
+                    placeholder="e.g., sftp-collector"
                     className="h-11"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="nodeDescription" className="text-sm font-semibold">
+                  <Label htmlFor="description" className="text-sm font-semibold">
                     Description <span className="text-destructive">*</span>
                   </Label>
                   <Textarea
-                    id="nodeDescription"
-                    value={nodeDescription}
-                    onChange={(e) => setNodeDescription(e.target.value)}
-                    placeholder="Describe the node's purpose and functionality"
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe the node family's purpose and functionality"
                     rows={4}
                     className="resize-none"
                   />
@@ -181,109 +165,58 @@ export function CreateNodePage() {
               </CardContent>
             </Card>
 
-            {/* Configuration */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Configuration</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="mediationType" className="text-sm font-semibold">
-                      Mediation Type <span className="text-destructive">*</span>
-                    </Label>
-                    <Select value={mediationType} onValueChange={setMediationType}>
-                      <SelectTrigger id="mediationType" className="h-11">
-                        <SelectValue placeholder="Select mediation type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="charging">Charging</SelectItem>
-                        <SelectItem value="convergent">Convergent Billing</SelectItem>
-                        <SelectItem value="ncc">Network Call Control</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="nodeType" className="text-sm font-semibold">
-                      Node Type <span className="text-destructive">*</span>
-                    </Label>
-                    <Select value={nodeType} onValueChange={setNodeType}>
-                      <SelectTrigger id="nodeType" className="h-11">
-                        <SelectValue placeholder="Select node type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="collector">Collector</SelectItem>
-                        <SelectItem value="decoder">Decoder</SelectItem>
-                        <SelectItem value="encoder">Encoder</SelectItem>
-                        <SelectItem value="enrichment">Enrichment</SelectItem>
-                        <SelectItem value="validation">Validation</SelectItem>
-                        <SelectItem value="fdc">FDC</SelectItem>
-                        <SelectItem value="interface">Interface</SelectItem>
-                        <SelectItem value="backup">Backup</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between py-2">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-semibold">Subnode Support</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Enable if this node will contain subnodes
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Label htmlFor="hasSubnodes" className="text-sm font-medium">
-                      {hasSubnodes ? "Enabled" : "Disabled"}
-                    </Label>
-                    <Switch
-                      id="hasSubnodes"
-                      checked={hasSubnodes}
-                      onCheckedChange={setHasSubnodes}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Script Upload */}
+            {/* Package Upload */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center gap-2">
-                  <FileCode className="h-5 w-5" />
-                  Script File
+                  <Upload className="h-5 w-5" />
+                  Node Package
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="scriptFile" className="text-sm font-semibold">
-                    Python Script <span className="text-destructive">*</span>
+                  <Label htmlFor="packageZip" className="text-sm font-semibold">
+                    Package File (.zip) <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Input
-                      id="scriptFile"
+                      id="packageZip"
                       type="file"
-                      accept=".py"
+                      accept=".zip"
                       onChange={handleFileUpload}
                       className="h-11 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                     />
                     <Upload className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   </div>
-                  {scriptFile && (
+                  {packageZip && (
                     <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
                       <FileCode className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">{scriptFile.name}</span>
+                      <span className="text-sm font-medium">{packageZip.name}</span>
                       <span className="text-xs text-muted-foreground ml-auto">
-                        {(scriptFile.size / 1024).toFixed(1)} KB
+                        {(packageZip.size / 1024).toFixed(1)} KB
                       </span>
                     </div>
                   )}
                 </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="versionNote" className="text-sm font-semibold">
+                    Package Note
+                  </Label>
+                  <Input
+                    id="versionNote"
+                    value={versionNote}
+                    onChange={(e) => setVersionNote(e.target.value)}
+                    placeholder="e.g., Initial release"
+                    className="h-11"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optional note about this package upload
+                  </p>
+                </div>
+                
                 <p className="text-xs text-muted-foreground">
-                  Upload a Python (.py) file containing your node's processing logic
+                  Upload a .zip file containing your node's processing logic
                 </p>
               </CardContent>
             </Card>
@@ -322,16 +255,16 @@ export function CreateNodePage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground">
                 <div>
-                  <p className="font-medium text-foreground">Node Name</p>
-                  <p>Use a clear, descriptive name that indicates the node's purpose</p>
+                  <p className="font-medium text-foreground">Node Family Name</p>
+                  <p>Use a clear, descriptive name (e.g., sftp-collector, diameter-interface)</p>
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Script Requirements</p>
-                  <p>Python file must contain valid processing logic for the selected node type</p>
+                  <p className="font-medium text-foreground">Package Requirements</p>
+                  <p>Upload a .zip file containing your node's processing logic and dependencies</p>
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Mediation Types</p>
-                  <p>Choose the appropriate type based on your data processing needs</p>
+                  <p className="font-medium text-foreground">Automatic Process</p>
+                  <p>The system will automatically create the family, upload the package, and create version 1</p>
                 </div>
               </CardContent>
             </Card>

@@ -164,9 +164,8 @@ export const subnodeService = {
   },
 
   // Update parameter values
-  async updateParameterValues(id: string, version: number, parameterValues: ParameterValueRequest[]): Promise<any> {
+  async updateParameterValues(id: string, parameterValues: ParameterValueRequest[]): Promise<any> {
     const response = await axiosInstance.patch(`subnodes/${id}/update_parameter_values/`, {
-      version,
       parameter_values: parameterValues
     });
     return response.data;

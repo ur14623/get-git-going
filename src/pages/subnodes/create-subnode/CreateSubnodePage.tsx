@@ -80,8 +80,8 @@ export function CreateSubnodePage() {
         description: "Subnode created successfully"
       });
       
-      // Navigate to subnodes list page, since we don't have the full subnode detail from create response
-      navigate('/subnodes');
+      // Navigate to devtool with subnodes tab
+      navigate('/devtool?tab=subnodes');
     } catch (error: any) {
       console.error("Create subnode error:", error);
       toast({
@@ -95,7 +95,7 @@ export function CreateSubnodePage() {
   };
 
   const handleCancel = () => {
-    navigate('/subnodes');
+    navigate('/devtool?tab=subnodes');
   };
 
   return (

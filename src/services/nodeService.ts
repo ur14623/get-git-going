@@ -242,9 +242,24 @@ export const nodeService = {
     }
   },
 
+  // Upload node package
+  async uploadNodePackage(familyId: string, packageZip: File, versionNote: string): Promise<any> {
+    const formData = new FormData();
+    formData.append('node_family', familyId);
+    formData.append('package_zip', packageZip);
+    formData.append('version_note', versionNote);
+    
+    const response = await axiosInstance.post('node-packages/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
   // Create node family
   async createNodeFamily(data: { name: string; description: string; created_by: string }): Promise<Node> {
-    const response = await axiosInstance.post('node-families/create/', data);
+    const response = await axiosInstance.post('node-families/', data);
     return response.data;
   },
 
