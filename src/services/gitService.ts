@@ -149,23 +149,24 @@ class GitService {
   private getMockGitInfo(): GitInfo {
     return {
       lastCommit: {
-        hash: 'a1b2c3d',
-        message: 'feat: Add git commit display to homepage',
+        hash: 'f9e8d7c',
+        message: 'feat: Enhanced package version display with modern card design',
         author: 'Developer',
         date: new Date().toISOString(),
         branch: 'main',
         filesChanged: [
-          { filename: 'src/pages/HomePage.tsx', status: 'modified', additions: 15, deletions: 3, changes: 18 },
-          { filename: 'src/services/gitService.ts', status: 'modified', additions: 42, deletions: 5, changes: 47 },
-          { filename: 'src/components/GitChanges.tsx', status: 'added', additions: 87, deletions: 0, changes: 87 },
+          { filename: 'src/pages/nodes/node-detail/NodeDetailPage.tsx', status: 'modified', additions: 89, deletions: 24, changes: 113 },
+          { filename: 'src/services/nodeService.ts', status: 'modified', additions: 28, deletions: 12, changes: 40 },
+          { filename: 'src/pages/devtool/NodePackageListPage.tsx', status: 'modified', additions: 45, deletions: 18, changes: 63 },
+          { filename: 'src/pages/devtool/NodePackageDetailPage.tsx', status: 'modified', additions: 52, deletions: 15, changes: 67 },
         ],
         stats: {
-          totalFiles: 3,
-          totalAdditions: 144,
-          totalDeletions: 8,
+          totalFiles: 4,
+          totalAdditions: 214,
+          totalDeletions: 69,
         },
       },
-      totalCommits: 127,
+      totalCommits: 128,
       status: 'clean',
       repository: {
         name: 'mediation-system',
