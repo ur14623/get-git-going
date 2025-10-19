@@ -75,7 +75,7 @@ export function SubnodeDetailPage() {
     
     setIsLoading(true);
     try {
-      await subnodeService.activateVersion(id!, selectedVersion.version);
+      await subnodeService.deployVersion(id!, selectedVersion.version);
       toast.success(`Version ${selectedVersion.version} deployed successfully`);
       await refetch();
       // Update selected version to reflect deployment status
@@ -98,7 +98,7 @@ export function SubnodeDetailPage() {
     
     setIsLoading(true);
     try {
-      await subnodeService.undeployVersion(id!, selectedVersion.version);
+      await subnodeService.undeployVersion(id!);
       toast.success(`Version ${selectedVersion.version} undeployed successfully`);
       await refetch();
       // Update selected version to reflect undeployment status
@@ -155,7 +155,7 @@ export function SubnodeDetailPage() {
   const handleActivateVersionFromModal = async (version: SubnodeVersionWithParametersByNodeVersion) => {
     setIsLoading(true);
     try {
-      await subnodeService.activateVersion(id!, version.version);
+      await subnodeService.deployVersion(id!, version.version);
       toast.success(`Version ${version.version} activated successfully`);
       await refetch();
       // Update selected version and close modal
@@ -216,7 +216,7 @@ export function SubnodeDetailPage() {
           const confirmDelete = confirm(`Are you sure you want to delete version ${selectedVersion.version}? This action cannot be undone.`);
           if (!confirmDelete) return;
           try {
-            await subnodeService.deleteSubnodeVersion(subnode.id, selectedVersion.version);
+            await subnodeService.deleteSubnodeVersion(selectedVersion.id);
             toast.success(`Version ${selectedVersion.version} deleted successfully`);
             refetch();
           } catch (error) {

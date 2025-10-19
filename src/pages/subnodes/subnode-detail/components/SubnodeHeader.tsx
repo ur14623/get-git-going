@@ -77,7 +77,7 @@ export function SubnodeHeader({
     if (!confirmDelete) return;
     
     try {
-      await subnodeService.deleteSubnodeVersion(subnode.id, selectedVersion.version);
+      await subnodeService.deleteSubnodeVersion(selectedVersion.id);
       toast.success(`Version ${selectedVersion.version} deleted successfully`);
       onRefresh();
     } catch (error) {

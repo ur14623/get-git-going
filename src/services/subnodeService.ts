@@ -183,15 +183,33 @@ export const subnodeService = {
     return response.data;
   },
 
-  // Activate/Deploy specific version
-  async activateVersion(id: string, version: number): Promise<{ id: string; name: string; is_deployed: boolean; version: number; message: string }> {
-    const response = await axiosInstance.post(`subnodes/${id}/activate_version/${version}/`);
+  // Deploy specific version (Set as ACTIVE)
+  async deployVersion(id: string, version: number): Promise<{ id: string; is_deployed: boolean; message: string }> {
+    const response = await axiosInstance.post(`subnodes/${id}/deploy/${version}`);
     return response.data;
   },
 
-  // Undeploy specific version
-  async undeployVersion(id: string, version: number): Promise<{ message: string }> {
-    const response = await axiosInstance.post(`subnodes/${id}/undeploy_version/${version}/`);
+  // Undeploy (Set ACTIVE version to inactive)
+  async undeployVersion(id: string): Promise<{ id: string; is_deployed: boolean; message: string }> {
+    const response = await axiosInstance.post(`subnodes/${id}/undeploy/`);
+    return response.data;
+  },
+
+  // Get all deployed subnodes (ACTIVE versions)
+  async getDeployedSubnodes(): Promise<SubnodeVersion[]> {
+    const response = await axiosInstance.get('subnodes/deployed/');
+    return response.data;
+  },
+
+  // Get all versions for a subnode (shallow)
+  async getVersions(id: string): Promise<SubnodeVersion[]> {
+    const response = await axiosInstance.get(`subnodes/${id}/versions/`);
+    return response.data;
+  },
+
+  // Get specific version detail
+  async getVersionDetail(id: string, version: number): Promise<VersionDetail> {
+    const response = await axiosInstance.get(`subnodes/${id}/versions/${version}`);
     return response.data;
   },
 
@@ -219,38 +237,21 @@ export const subnodeService = {
     return response.data;
   },
 
-  // Delete specific version
-  async deleteSubnodeVersion(id: string, version: number): Promise<{ message: string }> {
-    const response = await axiosInstance.delete(`subnodes/${id}/delete_version/${version}/`);
+  // Delete specific version (by version_id)
+  async deleteSubnodeVersion(versionId: string): Promise<void> {
+    await axiosInstance.delete(`subnodes/versions/${versionId}`);
+  },
+
+  // Get all parameter overrides
+  async getAllParameterValues(): Promise<any[]> {
+    const response = await axiosInstance.get('subnode-parameter-values/');
     return response.data;
   },
 
-  // Delete all versions
-  async deleteAllVersions(id: string): Promise<{ message: string }> {
-    const response = await axiosInstance.delete(`subnodes/${id}/delete_all_versions/`);
+  // Batch update parameters on a DRAFT version
+  async batchUpdateParameters(data: { subnode_version: string; parameter_values: Array<{ parameter: string; value: string }> }): Promise<any> {
+    const response = await axiosInstance.post('subnode-parameter-values/batch_update/', data);
     return response.data;
-  },
-
-  // Get version detail by fetching subnode and finding the specific version
-  async getVersionDetail(id: string, version: number): Promise<VersionDetail> {
-    const subnode = await this.getSubnode(id);
-    const versionData = subnode.versions.find(v => v.version === version);
-    
-    if (!versionData) {
-      throw new Error(`Version ${version} not found for subnode ${id}`);
-    }
-    
-    return {
-      id: versionData.id,
-      name: subnode.name,
-      description: subnode.description,
-      node: subnode.node || subnode.node_family?.id || '',
-      version: versionData.version,
-      version_comment: versionData.version_comment || '',
-      is_deployed: versionData.is_deployed,
-      is_editable: versionData.is_editable,
-      parameter_values: versionData.parameter_values || []
-    };
   },
 };
 
