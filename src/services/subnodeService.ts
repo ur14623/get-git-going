@@ -14,23 +14,22 @@ export interface SubnodeListItem {
   id: string;
   name: string;
   description: string;
-  node_family: string;
+  node_family?: string;
   node_family_name: string;
   active_version: number | null;
-  published: boolean;
-  original_version: number;
-  version_comment: string | null;
+  latest_version: number;
+  status: string;
   created_at: string;
-  updated_at: string;
-  created_by: string;
-  updated_by: string;
+  updated_at?: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 export interface SubnodesListResponse {
-  total: number;
-  published: number;
-  draft: number;
-  results: SubnodeListItem[];
+  total_subnodes_number: number;
+  total_active_subnodes_number: number;
+  total_drafted_subnodes_number: number;
+  subnodes: SubnodeListItem[];
 }
 
 export interface ParameterValue {

@@ -46,7 +46,7 @@ export function PropertiesPanel({
       // Filter subnodes by node ID from the global subnodes list
       subnodeService.getAllSubnodes()
         .then(allSubnodes => {
-          const nodeSubnodes = allSubnodes.results.filter(subnode => subnode.node_family === selectedNode.data.nodeId);
+          const nodeSubnodes = allSubnodes.subnodes.filter(subnode => subnode.node_family === selectedNode.data.nodeId);
           setAvailableSubnodes(nodeSubnodes);
         })
         .catch(error => {

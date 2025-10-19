@@ -113,7 +113,7 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
                 try {
                   const { subnodeService } = await import('@/services/subnodeService');
                   const allSubnodes = await subnodeService.getAllSubnodes();
-                  subnodes = allSubnodes.results
+                  subnodes = allSubnodes.subnodes
                     .filter((subnode: any) => subnode.node_family === apiNode.node_family)
                     .map((subnode: any) => ({
                       id: subnode.id,
@@ -243,7 +243,7 @@ export function RealTimeFlowEditor({ flowId }: RealTimeFlowEditorProps) {
           try {
             const { subnodeService } = await import('@/services/subnodeService');
             const allSubnodes = await subnodeService.getAllSubnodes();
-            subnodes = allSubnodes.results
+            subnodes = allSubnodes.subnodes
               .filter((subnode: any) => subnode.node_family === nodeId)
               .map((subnode: any) => ({
                 id: subnode.id,

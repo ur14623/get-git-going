@@ -304,7 +304,7 @@ export function DevToolPage() {
 
   // Filter logic for subnodes
   useEffect(() => {
-    let filtered = subnodesData?.results || [];
+    let filtered = subnodesData?.subnodes || [];
 
     if (subnodeSearchTerm) {
       filtered = filtered.filter(subnode =>
@@ -314,9 +314,9 @@ export function DevToolPage() {
 
     if (subnodeStatusFilter !== "all") {
       if (subnodeStatusFilter === "deployed") {
-        filtered = filtered.filter(subnode => subnode.published);
+        filtered = filtered.filter(subnode => subnode.status === "Active");
       } else if (subnodeStatusFilter === "draft") {
-        filtered = filtered.filter(subnode => !subnode.published);
+        filtered = filtered.filter(subnode => subnode.status === "Drafted");
       }
     }
 

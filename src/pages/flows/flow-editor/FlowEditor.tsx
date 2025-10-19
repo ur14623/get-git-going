@@ -56,7 +56,7 @@ const SimplifiedNode = ({ data, id, onSubnodeChange }: SimplifiedNodeProps) => {
       setLoading(true);
       try {
         const allSubnodes = await subnodeService.getAllSubnodes();
-        const nodeSubnodes = allSubnodes.results
+        const nodeSubnodes = allSubnodes.subnodes
           .filter(subnode => subnode.node_family === data.nodeId)
           .map(subnode => ({ id: subnode.id, name: subnode.name }));
         setSubnodes(nodeSubnodes);

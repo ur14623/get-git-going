@@ -33,7 +33,10 @@ export function SubnodesPage() {
   const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
 
-  const subnodes = subnodesData?.results || [];
+  const subnodes = subnodesData?.subnodes || [];
+  const totalSubnodes = subnodesData?.total_subnodes_number || 0;
+  const activeSubnodes = subnodesData?.total_active_subnodes_number || 0;
+  const draftSubnodes = subnodesData?.total_drafted_subnodes_number || 0;
 
   if (loading) {
     return <LoadingCard text="Loading subnodes..." className="min-h-[400px]" />;
@@ -59,10 +62,11 @@ export function SubnodesPage() {
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedSubnodes = filteredSubnodes.slice(startIndex, startIndex + pageSize);
 
-  const getDeploymentBadge = (activeVersion: number | null) => {
-    return activeVersion 
-      ? { variant: "default" as const, className: "bg-node-deployed text-white" }
-      : { variant: "outline" as const, className: "text-node-undeployed border-node-undeployed" };
+  const getStatusBadge = (status: string) => {
+    if (status === "Active") {
+      return { variant: "default" as const, className: "bg-green-600 hover:bg-green-700 text-white" };
+    }
+    return { variant: "outline" as const, className: "text-muted-foreground border-border" };
   };
 
   const handleDelete = async (subnodeId: string) => {
@@ -103,6 +107,24 @@ export function SubnodesPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Subnode Management</h1>
+        <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Total:</span>
+            <Badge variant="outline" className="font-semibold">{totalSubnodes}</Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Active:</span>
+            <Badge className="bg-green-600 hover:bg-green-700 text-white font-semibold">{activeSubnodes}</Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Draft:</span>
+            <Badge variant="outline" className="font-semibold">{draftSubnodes}</Badge>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Select
@@ -166,10 +188,10 @@ export function SubnodesPage() {
                 <CardTitle className="text-foreground text-sm flex items-center justify-between">
                   {subnode.name}
                   <Badge 
-                    variant={getDeploymentBadge(subnode.active_version).variant}
-                    className={getDeploymentBadge(subnode.active_version).className}
+                    variant={getStatusBadge(subnode.status).variant}
+                    className={getStatusBadge(subnode.status).className}
                   >
-                    {subnode.active_version ? "Active" : "Inactive"}
+                    {subnode.status}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -238,10 +260,10 @@ export function SubnodesPage() {
                   <TableCell className="text-sm">{subnode.active_version || 'None'}</TableCell>
                   <TableCell>
                     <Badge 
-                      variant={getDeploymentBadge(subnode.active_version).variant}
-                      className={getDeploymentBadge(subnode.active_version).className}
+                      variant={getStatusBadge(subnode.status).variant}
+                      className={getStatusBadge(subnode.status).className}
                     >
-                      {subnode.active_version ? "Active" : "Inactive"}
+                      {subnode.status}
                     </Badge>
                   </TableCell>
                   <TableCell>{subnode.updated_by || 'Unknown'}</TableCell>
