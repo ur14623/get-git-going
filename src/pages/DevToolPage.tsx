@@ -787,13 +787,10 @@ export function DevToolPage() {
                 Status
               </TableHead>
               <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Mediation Type
+                Node Name
               </TableHead>
               <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Node Type
-              </TableHead>
-              <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Version
+                Active Version
               </TableHead>
               <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Last Update Date
@@ -809,7 +806,7 @@ export function DevToolPage() {
           <TableBody>
             {subnodes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                   <div className="flex flex-col items-center gap-2">
                     <span className="text-sm">No subnodes found</span>
                   </div>
@@ -841,13 +838,10 @@ export function DevToolPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                      {subnode.mediation_type || 'N/A'}
+                      {subnode.node_family_name || 'N/A'}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                      {subnode.node_type || 'N/A'}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-sm text-muted-foreground">
-                      {subnode.version || '1.0'}
+                      {subnode.active_version || 'N/A'}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-muted-foreground">
                       {subnode.updated_at ? new Date(subnode.updated_at).toLocaleDateString('en-US', {
