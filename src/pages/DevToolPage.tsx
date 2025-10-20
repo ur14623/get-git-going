@@ -817,7 +817,8 @@ export function DevToolPage() {
               </TableRow>
             ) : (
               subnodes.map((subnode: any) => {
-                const isDeployed = subnode.is_deployed;
+                const status = subnode.status || 'Drafted';
+                const isActive = status === 'Active';
                 
                 return (
                   <TableRow 
@@ -833,10 +834,10 @@ export function DevToolPage() {
                       <Badge 
                         variant="outline"
                         className={`text-xs font-medium ${
-                          isDeployed ? 'bg-success text-success-foreground border-success' : 'bg-warning text-warning-foreground border-warning'
+                          isActive ? 'bg-success text-success-foreground border-success' : 'bg-warning text-warning-foreground border-warning'
                         }`}
                       >
-                        {isDeployed ? "Deployed" : "Draft"}
+                        {status}
                       </Badge>
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-muted-foreground">
