@@ -1106,22 +1106,19 @@ export function DevToolPage() {
               <TabsContent value="flows" className="p-6">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-2xl font-semibold text-foreground">Flow Management</h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                            Total: {flows.length}
-                          </Badge>
-                          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                            Active: {flows.filter(f => f.is_deployed).length}
-                          </Badge>
-                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                            Draft: {flows.filter(f => !f.is_deployed).length}
-                          </Badge>
-                        </div>
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-2xl font-semibold text-foreground">Flow Management</h3>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+                          <span className="font-semibold">Total:</span> {flows.length}
+                        </Badge>
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 px-3 py-1">
+                          <span className="font-semibold">Active:</span> {flows.filter(f => f.is_deployed).length}
+                        </Badge>
+                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 px-3 py-1">
+                          <span className="font-semibold">Draft:</span> {flows.filter(f => !f.is_deployed).length}
+                        </Badge>
                       </div>
-                      <p className="text-muted-foreground mt-1">Create, deploy, and manage your data processing flows</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <Button variant="outline" size="sm">
@@ -1180,22 +1177,19 @@ export function DevToolPage() {
               <TabsContent value="nodes" className="p-6">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-2xl font-semibold text-foreground">Node Management</h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                            Total: {nodes.length}
-                          </Badge>
-                          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                            Active: {nodes.filter(n => n.is_deployed).length}
-                          </Badge>
-                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                            Draft: {nodes.filter(n => !n.is_deployed).length}
-                          </Badge>
-                        </div>
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-2xl font-semibold text-foreground">Node Management</h3>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+                          <span className="font-semibold">Total:</span> {nodes.length}
+                        </Badge>
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 px-3 py-1">
+                          <span className="font-semibold">Active:</span> {nodes.filter(n => n.is_deployed).length}
+                        </Badge>
+                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 px-3 py-1">
+                          <span className="font-semibold">Draft:</span> {nodes.filter(n => !n.is_deployed).length}
+                        </Badge>
                       </div>
-                      <p className="text-muted-foreground mt-1">Configure and deploy processing nodes for your data pipelines</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <Button variant="outline" size="sm">
@@ -1254,22 +1248,19 @@ export function DevToolPage() {
               <TabsContent value="subnodes" className="p-6">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-2xl font-semibold text-foreground">Subnode Management</h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                            Total: {subnodesData?.total_subnodes_number || 0}
-                          </Badge>
-                          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                            Active: {subnodesData?.total_active_subnodes_number || 0}
-                          </Badge>
-                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                            Draft: {subnodesData?.total_drafted_subnodes_number || 0}
-                          </Badge>
-                        </div>
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-2xl font-semibold text-foreground">Subnode Management</h3>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+                          <span className="font-semibold">Total:</span> {subnodesData?.total_subnodes_number || 0}
+                        </Badge>
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 px-3 py-1">
+                          <span className="font-semibold">Active:</span> {subnodesData?.total_active_subnodes_number || 0}
+                        </Badge>
+                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 px-3 py-1">
+                          <span className="font-semibold">Draft:</span> {subnodesData?.total_drafted_subnodes_number || 0}
+                        </Badge>
                       </div>
-                      <p className="text-muted-foreground mt-1">Manage subnode configurations and deployments</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <Button variant="outline" size="sm">
@@ -1328,22 +1319,19 @@ export function DevToolPage() {
               <TabsContent value="parameters" className="p-6">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-2xl font-semibold text-foreground">Parameter Management</h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                            Total: {parametersData?.total || 0}
-                          </Badge>
-                          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                            Active: {parametersData?.published || 0}
-                          </Badge>
-                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                            Draft: {parametersData?.draft_count || 0}
-                          </Badge>
-                        </div>
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-2xl font-semibold text-foreground">Parameter Management</h3>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+                          <span className="font-semibold">Total:</span> {parametersData?.total || 0}
+                        </Badge>
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 px-3 py-1">
+                          <span className="font-semibold">Active:</span> {parametersData?.published || 0}
+                        </Badge>
+                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 px-3 py-1">
+                          <span className="font-semibold">Draft:</span> {parametersData?.draft_count || 0}
+                        </Badge>
                       </div>
-                      <p className="text-muted-foreground mt-1">Define and manage configuration parameters for your system</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <Button variant="outline" size="sm">
