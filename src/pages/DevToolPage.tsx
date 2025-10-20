@@ -91,10 +91,10 @@ export function DevToolPage() {
   const [subnodeStatusFilter, setSubnodeStatusFilter] = useState("all");
   
   // Parameters state
-  const [parameters, setParameters] = useState<any[]>([]);
   const [filteredParameters, setFilteredParameters] = useState<any[]>([]);
   const [parameterSearchTerm, setParameterSearchTerm] = useState("");
   const [parameterTypeFilter, setParameterTypeFilter] = useState("all");
+  const [parametersData, setParametersData] = useState<{ total: number; published: number; draft_count: number; results: any[] } | null>(null);
   const [parametersLoading, setParametersLoading] = useState(true);
 
   // Git state
@@ -217,7 +217,12 @@ export function DevToolPage() {
   const handleDeleteParameter = async (parameterId: string) => {
     try {
       await parameterService.deleteParameter(parameterId);
-      setParameters(parameters.filter(param => param.id !== parameterId));
+      if (parametersData) {
+        setParametersData({
+          ...parametersData,
+          results: parametersData.results.filter(param => param.id !== parameterId)
+        });
+      }
       toast({
         title: "Success",
         description: "Parameter deleted successfully"
@@ -325,20 +330,20 @@ export function DevToolPage() {
 
   // Filter logic for parameters
   useEffect(() => {
-    let filtered = parameters;
+    let filtered = parametersData?.results || [];
 
     if (parameterSearchTerm) {
       filtered = filtered.filter(param =>
-        param.name.toLowerCase().includes(parameterSearchTerm.toLowerCase())
+        param.key.toLowerCase().includes(parameterSearchTerm.toLowerCase())
       );
     }
 
     if (parameterTypeFilter !== "all") {
-      filtered = filtered.filter(param => param.type === parameterTypeFilter);
+      filtered = filtered.filter(param => param.datatype === parameterTypeFilter);
     }
 
     setFilteredParameters(filtered);
-  }, [parameters, parameterSearchTerm, parameterTypeFilter]);
+  }, [parametersData, parameterSearchTerm, parameterTypeFilter]);
 
   // Effects
   useEffect(() => {
@@ -372,11 +377,11 @@ export function DevToolPage() {
   useEffect(() => {
     const fetchParameters = async () => {
       try {
-        const response = await parameterService.getParameters();
-        setParameters(response || []);
+        const response = await parameterService.getParametersWithMetadata();
+        setParametersData(response);
       } catch (error) {
         console.error('Failed to fetch parameters:', error);
-        setParameters([]);
+        setParametersData({ total: 0, published: 0, draft_count: 0, results: [] });
       } finally {
         setParametersLoading(false);
       }
@@ -1102,7 +1107,20 @@ export function DevToolPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-2xl font-semibold text-foreground">Flow Management</h3>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-2xl font-semibold text-foreground">Flow Management</h3>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                            Total: {flows.length}
+                          </Badge>
+                          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                            Active: {flows.filter(f => f.is_deployed).length}
+                          </Badge>
+                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                            Draft: {flows.filter(f => !f.is_deployed).length}
+                          </Badge>
+                        </div>
+                      </div>
                       <p className="text-muted-foreground mt-1">Create, deploy, and manage your data processing flows</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1163,7 +1181,20 @@ export function DevToolPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-2xl font-semibold text-foreground">Node Management</h3>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-2xl font-semibold text-foreground">Node Management</h3>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                            Total: {nodes.length}
+                          </Badge>
+                          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                            Active: {nodes.filter(n => n.is_deployed).length}
+                          </Badge>
+                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                            Draft: {nodes.filter(n => !n.is_deployed).length}
+                          </Badge>
+                        </div>
+                      </div>
                       <p className="text-muted-foreground mt-1">Configure and deploy processing nodes for your data pipelines</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1224,7 +1255,20 @@ export function DevToolPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-2xl font-semibold text-foreground">Subnode Management</h3>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-2xl font-semibold text-foreground">Subnode Management</h3>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                            Total: {subnodesData?.total_subnodes_number || 0}
+                          </Badge>
+                          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                            Active: {subnodesData?.total_active_subnodes_number || 0}
+                          </Badge>
+                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                            Draft: {subnodesData?.total_drafted_subnodes_number || 0}
+                          </Badge>
+                        </div>
+                      </div>
                       <p className="text-muted-foreground mt-1">Manage subnode configurations and deployments</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1285,7 +1329,20 @@ export function DevToolPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-2xl font-semibold text-foreground">Parameter Management</h3>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-2xl font-semibold text-foreground">Parameter Management</h3>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                            Total: {parametersData?.total || 0}
+                          </Badge>
+                          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                            Active: {parametersData?.published || 0}
+                          </Badge>
+                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                            Draft: {parametersData?.draft_count || 0}
+                          </Badge>
+                        </div>
+                      </div>
                       <p className="text-muted-foreground mt-1">Define and manage configuration parameters for your system</p>
                     </div>
                     <div className="flex items-center gap-3">
