@@ -24,7 +24,7 @@ export function SubnodeDetailPage() {
 
   // Set initial version when subnode data loads
   useEffect(() => {
-    if (subnode && subnode.versions.length > 0) {
+    if (subnode && subnode.versions && subnode.versions.length > 0) {
       // If version is specified in URL, try to find and select it
       if (versionParam) {
         const versionNumber = parseInt(versionParam);
@@ -79,7 +79,7 @@ export function SubnodeDetailPage() {
       toast.success(`Version ${selectedVersion.version} deployed successfully`);
       await refetch();
       // Update selected version to reflect deployment status
-      if (subnode) {
+      if (subnode && subnode.versions) {
         const updatedVersion = subnode.versions.find(v => v.version === selectedVersion.version);
         if (updatedVersion) {
           setSelectedVersion({ ...updatedVersion, is_deployed: true });
@@ -118,7 +118,7 @@ export function SubnodeDetailPage() {
       console.log("New version created:", response); // Debug log
       
       // The API returns full subnode detail with all versions
-      if (response.versions && response.versions.length > 0) {
+      if (response && response.versions && response.versions.length > 0) {
         // Find the newly created editable version
         const newVersion = response.versions.find(v => v.is_editable && !v.is_deployed);
         if (newVersion) {
@@ -241,7 +241,7 @@ export function SubnodeDetailPage() {
       <VersionHistoryModal
         open={showVersionHistoryModal}
         onOpenChange={setShowVersionHistoryModal}
-        versions={subnode.versions}
+        versions={subnode.versions || []}
         selectedVersion={selectedVersion}
         onSelectVersion={handleSelectVersion}
         onActivateVersion={handleActivateVersionFromModal}
