@@ -1,61 +1,52 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Eye, Trash2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import axios from "axios";
 
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 export interface NodePackage {
   id: string;
+  name: string;
+  description: string;
   node_family: string;
   node_family_name: string;
-  version: number;
-  package_zip: string | null;
-  package_url: string | null;
-  extracted_path: string | null;
-  extracted_path_display: string | null;
-  entry_point: string | null;
-  package_hash: string | null;
-  state: string;
-  uploaded_by: string;
-  uploaded_at: string;
+  is_deployed: boolean;
+  active_package_version: number | null;
+  latest_version: number;
+  total_versions: number;
+  created_by: string;
+  created_at: string;
+  last_updated_by: string;
+  last_updated_at: string;
+}
+
+interface NodePackageResponse {
+  total_packages: number;
+  total_active: number;
+  total_draft: number;
+  packages: NodePackage[];
 }
 
 export function NodePackageListPage() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   
   const [packages, setPackages] = useState<NodePackage[]>([]);
   const [filteredPackages, setFilteredPackages] = useState<NodePackage[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [stateFilter, setStateFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [packageToDelete, setPackageToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const response = await axios.get<NodePackage[]>(`${API_BASE_URL}/node-packages/`);
-        setPackages(response.data);
+        const response = await axios.get<NodePackageResponse>(`${API_BASE_URL}/node_package/`);
+        setPackages(response.data.packages);
       } catch (error) {
         console.error("Failed to fetch node packages:", error);
         toast({
@@ -77,43 +68,21 @@ export function NodePackageListPage() {
 
     if (searchTerm) {
       filtered = filtered.filter(pkg =>
+        pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pkg.node_family_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    if (stateFilter !== "all") {
-      filtered = filtered.filter(pkg => pkg.state.toLowerCase() === stateFilter);
+    if (statusFilter !== "all") {
+      if (statusFilter === "deployed") {
+        filtered = filtered.filter(pkg => pkg.is_deployed === true);
+      } else if (statusFilter === "draft") {
+        filtered = filtered.filter(pkg => pkg.is_deployed === false);
+      }
     }
 
     setFilteredPackages(filtered);
-  }, [packages, searchTerm, stateFilter]);
-
-  const handleDelete = async () => {
-    if (!packageToDelete) return;
-
-    try {
-      await axios.delete(`${API_BASE_URL}/node-packages/${packageToDelete}/`);
-      setPackages(packages.filter(pkg => pkg.id !== packageToDelete));
-      toast({
-        title: "Success",
-        description: "Node package deleted successfully"
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete node package",
-        variant: "destructive"
-      });
-    } finally {
-      setDeleteDialogOpen(false);
-      setPackageToDelete(null);
-    }
-  };
-
-  const openDeleteDialog = (id: string) => {
-    setPackageToDelete(id);
-    setDeleteDialogOpen(true);
-  };
+  }, [packages, searchTerm, statusFilter]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -123,20 +92,6 @@ export function NodePackageListPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getStateBadgeVariant = (state: string) => {
-    const lowerState = state.toLowerCase();
-    switch (lowerState) {
-      case "published":
-        return "default";
-      case "draft":
-        return "secondary";
-      case "archived":
-        return "outline";
-      default:
-        return "default";
-    }
   };
 
   return (
@@ -150,21 +105,20 @@ export function NodePackageListPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by node family name..."
+                placeholder="Search by package name or node family..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
               />
             </div>
-            <Select value={stateFilter} onValueChange={setStateFilter}>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Filter by state" />
+                <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All States</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="deployed">Deployed</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -173,73 +127,43 @@ export function NodePackageListPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Package Name</TableHead>
                   <TableHead>Node Family Name</TableHead>
-                  <TableHead>Version</TableHead>
-                  <TableHead>State</TableHead>
-                  <TableHead>Uploaded By</TableHead>
-                  <TableHead>Uploaded At</TableHead>
-                  <TableHead>Entry Point</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Active Version</TableHead>
+                  <TableHead>Last Updated By</TableHead>
+                  <TableHead>Last Updated At</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={6} className="text-center py-8">
                       Loading...
                     </TableCell>
                   </TableRow>
                 ) : filteredPackages.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No node packages found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredPackages.map((pkg) => (
                     <TableRow key={pkg.id}>
-                      <TableCell className="font-medium">{pkg.node_family_name}</TableCell>
-                      <TableCell>{pkg.version}</TableCell>
+                      <TableCell className="font-medium">{pkg.name}</TableCell>
+                      <TableCell>{pkg.node_family_name}</TableCell>
                       <TableCell>
-                        <Badge variant={getStateBadgeVariant(pkg.state)}>
-                          {pkg.state.charAt(0).toUpperCase() + pkg.state.slice(1)}
+                        <Badge 
+                          variant={pkg.is_deployed ? "default" : "secondary"}
+                          className={pkg.is_deployed ? "bg-success" : ""}
+                        >
+                          {pkg.is_deployed ? "Deployed" : "Draft"}
                         </Badge>
                       </TableCell>
-                      <TableCell>{pkg.uploaded_by || "—"}</TableCell>
-                      <TableCell>{formatDate(pkg.uploaded_at)}</TableCell>
-                      <TableCell className="font-mono text-sm">{pkg.entry_point || "—"}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => navigate(`/devtool/node-packages/${pkg.id}`)}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>View Details</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => openDeleteDialog(pkg.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Delete</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </TableCell>
+                      <TableCell>{pkg.active_package_version || "—"}</TableCell>
+                      <TableCell>{pkg.last_updated_by || "—"}</TableCell>
+                      <TableCell>{formatDate(pkg.last_updated_at)}</TableCell>
                     </TableRow>
                   ))
                 )}
@@ -248,21 +172,6 @@ export function NodePackageListPage() {
           </div>
         </CardContent>
       </Card>
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the node package version.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
