@@ -1083,6 +1083,10 @@ export function DevToolPage() {
                     <Grid3X3 className="mr-2 h-4 w-4" />
                     Parameters
                   </TabsTrigger>
+                  <TabsTrigger value="node-packages" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                    <Package className="mr-2 h-4 w-4" />
+                    Node Package Registry
+                  </TabsTrigger>
                   <TabsTrigger value="events" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                     <Activity className="mr-2 h-4 w-4" />
                     Event Management
@@ -1090,10 +1094,6 @@ export function DevToolPage() {
                   <TabsTrigger value="configs" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                     <Settings className="mr-2 h-4 w-4" />
                     Config Management
-                  </TabsTrigger>
-                  <TabsTrigger value="node-packages" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                    <Package className="mr-2 h-4 w-4" />
-                    Node Package Registry
                   </TabsTrigger>
                 </TabsList>
               </div>
