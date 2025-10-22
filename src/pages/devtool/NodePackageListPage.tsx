@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search } from "lucide-react";
+import { Search, Upload, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
@@ -94,105 +94,149 @@ export function NodePackageListPage() {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     });
   };
 
   return (
-    <>
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <CardTitle>Node Package Registry</CardTitle>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
-                  <span className="font-semibold">Total:</span> {counters.total}
-                </Badge>
-                <Badge variant="outline" className="bg-success/10 text-success border-success/20 px-3 py-1">
-                  <span className="font-semibold">Active:</span> {counters.active}
-                </Badge>
-                <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 px-3 py-1">
-                  <span className="font-semibold">Draft:</span> {counters.draft}
-                </Badge>
-              </div>
-            </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h3 className="text-2xl font-semibold text-foreground">Node Package Registry</h3>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+              <span className="font-semibold">Total:</span> {counters.total}
+            </Badge>
+            <Badge variant="outline" className="bg-success/10 text-success border-success/20 px-3 py-1">
+              <span className="font-semibold">Active:</span> {counters.active}
+            </Badge>
+            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 px-3 py-1">
+              <span className="font-semibold">Draft:</span> {counters.draft}
+            </Badge>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm">
+            <Upload className="mr-2 h-4 w-4" />
+            Import Package
+          </Button>
+          <Button className="bg-success text-success-foreground hover:bg-success/90">
+            <Plus className="mr-2 h-4 w-4" />
+            Create New Package
+          </Button>
+        </div>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="professional-card p-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by package name or node family..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="pl-10 surface-interactive"
               />
             </div>
+          </div>
+          <div className="flex gap-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className="w-[160px] surface-interactive">
+                <SelectValue placeholder="All Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-card border border-border shadow-lg z-50">
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="deployed">Deployed</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
               </SelectContent>
             </Select>
           </div>
+        </div>
+      </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Package Name</TableHead>
-                  <TableHead>Node Family Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Active Version</TableHead>
-                  <TableHead>Last Updated By</TableHead>
-                  <TableHead>Last Updated At</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      Loading...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredPackages.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No node packages found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPackages.map((pkg) => (
-                    <TableRow key={pkg.id}>
-                      <TableCell className="font-medium">{pkg.name}</TableCell>
-                      <TableCell>{pkg.node_family_name}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={pkg.is_deployed ? "default" : "secondary"}
-                          className={pkg.is_deployed ? "bg-success" : ""}
-                        >
-                          {pkg.is_deployed ? "Deployed" : "Draft"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{pkg.active_package_version || "—"}</TableCell>
-                      <TableCell>{pkg.last_updated_by || "—"}</TableCell>
-                      <TableCell>{formatDate(pkg.last_updated_at)}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground">Loading packages...</p>
           </div>
-        </CardContent>
-      </Card>
-    </>
+        </div>
+      ) : (
+        <div className="overflow-hidden border border-border rounded-lg bg-card shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border bg-muted/30">
+                <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Package Name
+                </TableHead>
+                <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Node Family Name
+                </TableHead>
+                <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Status
+                </TableHead>
+                <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Active Version
+                </TableHead>
+                <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Last Updated By
+                </TableHead>
+                <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Last Updated At
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPackages.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-sm">No packages found</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredPackages.map((pkg) => (
+                  <TableRow 
+                    key={pkg.id} 
+                    className="hover:bg-muted/20 transition-colors"
+                  >
+                    <TableCell className="px-6 py-4">
+                      <div>
+                        <div className="font-medium text-foreground">{pkg.name}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                      {pkg.node_family_name}
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <Badge 
+                        variant="outline"
+                        className={`text-xs font-medium ${
+                          pkg.is_deployed ? 'bg-success text-success-foreground border-success' : 'bg-warning text-warning-foreground border-warning'
+                        }`}
+                      >
+                        {pkg.is_deployed ? "Deployed" : "Draft"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                      {pkg.active_package_version || "N/A"}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                      {pkg.last_updated_by || "System"}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                      {formatDate(pkg.last_updated_at)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
   );
 }
