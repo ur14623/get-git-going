@@ -41,12 +41,18 @@ export function NodePackageListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [counters, setCounters] = useState({ total: 0, active: 0, draft: 0 });
 
   useEffect(() => {
     const fetchPackages = async () => {
       try {
         const response = await axios.get<NodePackageResponse>(`${API_BASE_URL}/node_package/`);
         setPackages(response.data.packages);
+        setCounters({
+          total: response.data.total_packages,
+          active: response.data.total_active,
+          draft: response.data.total_draft
+        });
       } catch (error) {
         console.error("Failed to fetch node packages:", error);
         toast({
@@ -97,8 +103,23 @@ export function NodePackageListPage() {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle>Node Package Registry</CardTitle>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <CardTitle>Node Package Registry</CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+                  <span className="font-semibold">Total:</span> {counters.total}
+                </Badge>
+                <Badge variant="outline" className="bg-success/10 text-success border-success/20 px-3 py-1">
+                  <span className="font-semibold">Active:</span> {counters.active}
+                </Badge>
+                <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 px-3 py-1">
+                  <span className="font-semibold">Draft:</span> {counters.draft}
+                </Badge>
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
