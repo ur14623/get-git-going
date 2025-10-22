@@ -15,7 +15,9 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Upload,
+  Plus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -188,18 +190,40 @@ export function EventManagementPage() {
     return error.length > 50 ? error.substring(0, 50) + "..." : error;
   };
 
+  const totalTopics = topics.length;
+  const activeTopics = topics.filter(t => t.status === 'Created').length;
+  const failedTopics = topics.filter(t => t.status === 'Failed').length;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="professional-card p-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Event Management</h1>
-          <p className="text-muted-foreground mt-1">Manage Kafka topics and event streaming infrastructure</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h3 className="text-2xl font-semibold text-foreground">Event Management</h3>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+              <span className="font-semibold">Total:</span> {totalTopics}
+            </Badge>
+            <Badge variant="outline" className="bg-success/10 text-success border-success/20 px-3 py-1">
+              <span className="font-semibold">Active:</span> {activeTopics}
+            </Badge>
+            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 px-3 py-1">
+              <span className="font-semibold">Failed:</span> {failedTopics}
+            </Badge>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm">
+            <Upload className="mr-2 h-4 w-4" />
+            Import Topic
+          </Button>
+          <Button className="bg-success text-success-foreground hover:bg-success/90">
+            <Plus className="mr-2 h-4 w-4" />
+            Create New Topic
+          </Button>
         </div>
       </div>
 
-
-      {/* Filters & Search */}
+      {/* Search and Filter */}
       <div className="professional-card p-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -218,7 +242,7 @@ export function EventManagementPage() {
               <SelectTrigger className="w-[140px] surface-interactive">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
-              <SelectContent className="bg-card border border-border shadow-lg">
+              <SelectContent className="bg-card border border-border shadow-lg z-50">
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="created">Created</SelectItem>
@@ -226,10 +250,10 @@ export function EventManagementPage() {
               </SelectContent>
             </Select>
             <Select value={flowFilter} onValueChange={setFlowFilter}>
-              <SelectTrigger className="w-[140px] surface-interactive">
+              <SelectTrigger className="w-[160px] surface-interactive">
                 <SelectValue placeholder="All Flows" />
               </SelectTrigger>
-              <SelectContent className="bg-card border border-border shadow-lg">
+              <SelectContent className="bg-card border border-border shadow-lg z-50">
                 <SelectItem value="all">All Flows</SelectItem>
                 <SelectItem value="flow-001">Flow 001</SelectItem>
                 <SelectItem value="flow-003">Flow 003</SelectItem>
@@ -240,32 +264,32 @@ export function EventManagementPage() {
       </div>
 
       {/* Topics Table */}
-      <div className="professional-card overflow-hidden">
+      <div className="overflow-hidden border border-border rounded-lg bg-card shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-border bg-muted/50">
-              <TableHead className="h-14 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <TableRow className="border-b border-border bg-muted/30">
+              <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Topic Name
               </TableHead>
               <TableHead className="h-14 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Status
               </TableHead>
-              <TableHead className="h-14 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Configuration
               </TableHead>
-              <TableHead className="h-14 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Flow Link
               </TableHead>
-              <TableHead className="h-14 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Error Status
               </TableHead>
-              <TableHead className="h-14 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Owner
               </TableHead>
-              <TableHead className="h-14 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Created
               </TableHead>
-              <TableHead className="h-14 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">
+              <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">
                 Actions
               </TableHead>
             </TableRow>
@@ -273,28 +297,22 @@ export function EventManagementPage() {
           <TableBody>
             {filteredTopics.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="p-4 bg-muted/30 rounded-full">
-                      <Activity className="h-8 w-8 text-muted-foreground/50" />
-                    </div>
-                    <div>
-                      <p className="font-medium">No topics found</p>
-                      <p className="text-sm text-muted-foreground">Try adjusting your search criteria</p>
-                    </div>
+                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-sm">No topics found</span>
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
               filteredTopics.map((topic) => (
-                <TableRow key={topic.id} className="hover:bg-muted/30 transition-colors border-b border-border/50">
-                  <TableCell className="px-6 py-5">
+                <TableRow key={topic.id} className="hover:bg-muted/20 transition-colors">
+                  <TableCell className="px-6 py-4">
                     <div className="space-y-1">
-                      <div className="font-semibold text-foreground">{topic.name}</div>
+                      <div className="font-medium text-foreground">{topic.name}</div>
                       <div className="text-xs text-muted-foreground">ID: {topic.id}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="px-6 py-4">
                     <Badge 
                       variant="outline"
                       className={`text-xs font-medium ${getStatusBadge(topic.status)}`}
@@ -305,13 +323,13 @@ export function EventManagementPage() {
                       {topic.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="px-6 py-4">
                     <div className="space-y-1">
                       <div className="text-sm font-medium">{topic.partitions} partitions</div>
                       <div className="text-xs text-muted-foreground">RF: {topic.replicationFactor}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="px-6 py-4">
                     {topic.linkedFlowEdge ? (
                       <Button
                         variant="link"
@@ -326,7 +344,7 @@ export function EventManagementPage() {
                       <span className="text-sm text-muted-foreground italic">No flow linked</span>
                     )}
                   </TableCell>
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="px-6 py-4">
                     {topic.lastError ? (
                       <TooltipProvider>
                         <Tooltip>
@@ -348,18 +366,18 @@ export function EventManagementPage() {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="px-6 py-4">
                     <div className="space-y-1">
                       <div className="text-sm font-medium">{topic.createdBy.split('@')[0]}</div>
                       <div className="text-xs text-muted-foreground">{topic.createdBy.split('@')[1]}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="px-6 py-4">
                     <div className="text-sm text-muted-foreground">
                       {formatDate(topic.createdAt)}
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
                       <TooltipProvider>
                         <Tooltip>
