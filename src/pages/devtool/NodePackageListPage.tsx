@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Upload, Plus } from "lucide-react";
+import { Search, Upload, Plus, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const API_BASE_URL = "http://127.0.0.1:8000/api";
@@ -35,6 +36,7 @@ interface NodePackageResponse {
 
 export function NodePackageListPage() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const [packages, setPackages] = useState<NodePackage[]>([]);
   const [filteredPackages, setFilteredPackages] = useState<NodePackage[]>([]);
@@ -186,12 +188,15 @@ export function NodePackageListPage() {
                 <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Last Updated At
                 </TableHead>
+                <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPackages.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                     <div className="flex flex-col items-center gap-2">
                       <span className="text-sm">No packages found</span>
                     </div>
@@ -229,6 +234,17 @@ export function NodePackageListPage() {
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-muted-foreground">
                       {formatDate(pkg.last_updated_at)}
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/devtool/node-packages/${pkg.id}`)}
+                        className="hover:bg-muted"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
