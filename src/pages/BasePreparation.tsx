@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Users, Clock, DollarSign, Target, Gift, CreditCard, X, Wallet, Building } from "lucide-react";
-import { BaseTableBuilder } from "@/components/base-preparation/BaseTableBuilder";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Calendar as CalendarIcon, Users, Clock, DollarSign, Target, Gift, CreditCard, X, Wallet, Building, Eye, Save, Database, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,6 +36,18 @@ interface TableStatus {
   status: "pending" | "running" | "completed" | "error";
   time: number;
   parameters: string;
+}
+
+export interface CreatedTable {
+  id: string;
+  tableName: string;
+  createdFrom: string;
+  columnsUsed: string[];
+  rowCount: number;
+  dateCreated: string;
+  timeTaken: string;
+  parameters: Record<string, any>;
+  tableType: string;
 }
 
 const availableTables: { id: string; label: string; icon: any; borderColor: string; fields: TableFieldConfig[] }[] = [
@@ -127,14 +140,54 @@ const availableTables: { id: string; label: string; icon: any; borderColor: stri
   },
 ];
 
+// Mock data for created tables
+const mockCreatedTables: CreatedTable[] = [
+  {
+    id: "1",
+    tableName: "VLR_ATTACHED_CUSTOMERS_NOV29",
+    createdFrom: "VLR ATTACHED CUSTOMERS",
+    columnsUsed: ["MSISDN", "CUSTOMER_ID", "VLR_STATUS"],
+    rowCount: 125430,
+    dateCreated: "2025-12-13T10:15:32Z",
+    timeTaken: "2.3s",
+    parameters: { day_from: 0, day_to: 10 },
+    tableType: "vlr_attached_customers"
+  },
+  {
+    id: "2",
+    tableName: "ACTIVE_CUSTOMERS_NOV29",
+    createdFrom: "ACTIVE CUSTOMERS",
+    columnsUsed: ["MSISDN", "CUSTOMER_ID", "LAST_ACTIVITY"],
+    rowCount: 89234,
+    dateCreated: "2025-12-13T09:45:12Z",
+    timeTaken: "1.8s",
+    parameters: { data_from: "2025-11-29", active_for: 30 },
+    tableType: "active_customers"
+  },
+  {
+    id: "3",
+    tableName: "BALANCE_THRESHOLD_10_NOV29",
+    createdFrom: "BALANCE THRESHOLD",
+    columnsUsed: ["MSISDN", "BALANCE"],
+    rowCount: 45678,
+    dateCreated: "2025-12-12T14:30:00Z",
+    timeTaken: "1.2s",
+    parameters: { balance_threshold: 10, comparison: "greater than or equal to" },
+    tableType: "balance_threshold"
+  },
+];
+
 export default function BasePreparation() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [postfix, setPostfix] = useState("NOV29");
   const [selectedTableId, setSelectedTableId] = useState<string>("");
   const [selectedTables, setSelectedTables] = useState<TableConfig[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
   const [tableStatuses, setTableStatuses] = useState<TableStatus[]>([]);
+  const [createdTables, setCreatedTables] = useState<CreatedTable[]>(mockCreatedTables);
+  const [savingTableId, setSavingTableId] = useState<string | null>(null);
 
   const handleAddTable = () => {
     if (!selectedTableId) return;
@@ -295,6 +348,42 @@ export default function BasePreparation() {
     }
   };
 
+  const handleViewTable = (tableName: string) => {
+    navigate(`/base-preparation/table/${encodeURIComponent(tableName)}`);
+  };
+
+  const handleSaveTable = async (table: CreatedTable) => {
+    setSavingTableId(table.id);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Get existing saved tables
+    const savedTables = JSON.parse(localStorage.getItem('savedTables') || '[]');
+    
+    // Check if already saved
+    if (savedTables.some((t: CreatedTable) => t.tableName === table.tableName)) {
+      toast({
+        title: "Already Saved",
+        description: "This table is already in your saved tables.",
+        variant: "destructive"
+      });
+      setSavingTableId(null);
+      return;
+    }
+    
+    // Save the table
+    savedTables.push(table);
+    localStorage.setItem('savedTables', JSON.stringify(savedTables));
+    
+    toast({
+      title: "Table Saved",
+      description: `${table.tableName} has been saved to your saved tables.`,
+    });
+    
+    setSavingTableId(null);
+  };
+
   const renderField = (table: TableConfig, field: TableFieldConfig) => {
     const value = table.values[field.name];
 
@@ -420,8 +509,8 @@ export default function BasePreparation() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 w-full">
+      <div className="w-full p-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Base Preparation Dashboard
@@ -429,168 +518,271 @@ export default function BasePreparation() {
           <p className="text-muted-foreground mt-1">Configure and generate base tables</p>
         </div>
 
-        <div className="space-y-6">
-          <Card className="border-2 shadow-elegant">
-            <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
-              <CardTitle className="flex items-center gap-2">
-                ⚙️ BASE TABLE CONFIGURATION
-              </CardTitle>
-              <CardDescription>Select tables and configure parameters</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="postfix" className="text-base font-semibold">Table Postfix</Label>
-                  <Input 
-                    id="postfix"
-                    type="text" 
-                    value={postfix} 
-                    onChange={(e) => setPostfix(e.target.value.toUpperCase())} 
-                    placeholder="e.g., NOV29"
-                    className="mt-2"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Appended to all table names</p>
-                </div>
+        {/* Base Preparation Tracking Table */}
+        <Card className="border-2 shadow-elegant">
+          <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  Base Preparation Tracking
+                </CardTitle>
+                <CardDescription>Track all created base-preparation tables</CardDescription>
+              </div>
+              <Badge variant="outline" className="text-sm">
+                {createdTables.length} Tables
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30">
+                  <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Table Name</TableHead>
+                  <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created From</TableHead>
+                  <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Columns Used</TableHead>
+                  <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Row Count</TableHead>
+                  <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date Created</TableHead>
+                  <TableHead className="h-12 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {createdTables.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No tables created yet
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  createdTables.map((table) => (
+                    <TableRow key={table.id} className="hover:bg-muted/20 transition-colors">
+                      <TableCell className="px-6 py-4 font-medium">{table.tableName}</TableCell>
+                      <TableCell className="px-6 py-4">{table.createdFrom}</TableCell>
+                      <TableCell className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {table.columnsUsed.map((col, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {col}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4">{table.rowCount.toLocaleString()}</TableCell>
+                      <TableCell className="px-6 py-4">
+                        {new Date(table.dateCreated).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewTable(table.tableName)}
+                            className="gap-1"
+                          >
+                            <Eye className="h-4 w-4" />
+                            View
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSaveTable(table)}
+                            disabled={savingTableId === table.id}
+                            className="gap-1"
+                          >
+                            {savingTableId === table.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Save className="h-4 w-4" />
+                            )}
+                            Save
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
-                <div>
-                  <Label className="text-base font-semibold">Add Tables</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Select value={selectedTableId} onValueChange={setSelectedTableId}>
-                      <SelectTrigger className="flex-1 bg-background">
-                        <SelectValue placeholder="Select a table to add..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        {availableToSelect.map(table => (
-                          <SelectItem key={table.id} value={table.id}>
-                            {table.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button onClick={handleAddTable} disabled={!selectedTableId}>
-                      Add
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {selectedTables.length === 0 
-                      ? "No tables selected"
-                      : `${selectedTables.length} table(s) selected`}
-                  </p>
+        {/* Table Configuration */}
+        <Card className="border-2 shadow-elegant">
+          <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
+            <CardTitle className="flex items-center gap-2">
+              ⚙️ BASE TABLE CONFIGURATION
+            </CardTitle>
+            <CardDescription>Select tables and configure parameters</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="postfix" className="text-base font-semibold">Table Postfix</Label>
+                <Input 
+                  id="postfix"
+                  type="text" 
+                  value={postfix} 
+                  onChange={(e) => setPostfix(e.target.value.toUpperCase())} 
+                  placeholder="e.g., NOV29"
+                  className="mt-2"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Appended to all table names</p>
+              </div>
+
+              <div>
+                <Label className="text-base font-semibold">Add Tables</Label>
+                <div className="flex gap-2 mt-2">
+                  <Select value={selectedTableId} onValueChange={setSelectedTableId}>
+                    <SelectTrigger className="flex-1 bg-background">
+                      <SelectValue placeholder="Select a table to add..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {availableToSelect.map(table => (
+                        <SelectItem key={table.id} value={table.id}>
+                          {table.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleAddTable} disabled={!selectedTableId}>
+                    Add
+                  </Button>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {selectedTables.length === 0 
+                    ? "No tables selected"
+                    : `${selectedTables.length} table(s) selected`}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {selectedTables.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {selectedTables.map(table => {
+              const Icon = table.icon;
+              return (
+                <Card key={table.id} className={`border-l-4 ${table.borderColor}`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between text-base">
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {table.label}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleRemoveTable(table.id)}
+                        disabled={isGenerating}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {table.fields.map(field => (
+                      <div key={field.name}>
+                        <Label>{field.label}{field.required && " *"}</Label>
+                        {renderField(table, field)}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {selectedTables.length > 0 && (
+          <div className="flex justify-center">
+            <Button
+              size="lg"
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="gap-2"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                "Generate Base Tables"
+              )}
+            </Button>
+          </div>
+        )}
+
+        {isGenerating && (
+          <Card className="border-2 shadow-elegant animate-fade-in">
+            <CardHeader className="border-b bg-gradient-to-r from-blue-500/5 to-transparent">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  📊 PROGRESS TRACKING
+                </CardTitle>
+                <Badge variant="outline" className="text-base">
+                  {completedTables}/{tableStatuses.length} Tables
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-muted-foreground">Overall Status</p>
+                    <p className="text-lg font-semibold mt-1">
+                      {completedTables === tableStatuses.length ? "🟢 Complete" : "🟡 Running"}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-muted-foreground">Elapsed Time</p>
+                    <p className="text-lg font-semibold mt-1">{Math.floor((Date.now() - startTime) / 1000)}s</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-muted-foreground">Total Execution</p>
+                    <p className="text-lg font-semibold mt-1">
+                      {completedTables === tableStatuses.length 
+                        ? `${Math.floor((Date.now() - startTime) / 1000)}s` 
+                        : "-"}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="space-y-3">
+                {tableStatuses.map((table, idx) => (
+                  <Card key={idx} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{table.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{table.parameters}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {getStatusBadge(table.status)}
+                          <p className="text-sm font-mono min-w-[60px] text-right">
+                            {table.status === "completed" && `${table.time}s`}
+                            {table.status === "running" && `${table.time}s...`}
+                            {table.status === "pending" && "-"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </CardContent>
           </Card>
-
-          {selectedTables.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {selectedTables.map(table => {
-                const Icon = table.icon;
-                return (
-                  <Card key={table.id} className={`border-l-4 ${table.borderColor}`}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between text-base">
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" />
-                          {table.label}
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleRemoveTable(table.id)}
-                          disabled={isGenerating}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {table.fields.map(field => (
-                        <div key={field.name}>
-                          <Label>{field.label}{field.required && " *"}</Label>
-                          {renderField(table, field)}
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Base Table Builder - shows when tables are selected */}
-          {selectedTables.length > 0 && (
-            <BaseTableBuilder 
-              availableTables={selectedTables.map(t => `${t.values.table_name || t.label.replace(/ /g, "_")}_${postfix}`)}
-              postfix={postfix}
-            />
-          )}
-
-          {isGenerating && (
-            <Card className="border-2 shadow-elegant animate-fade-in">
-              <CardHeader className="border-b bg-gradient-to-r from-blue-500/5 to-transparent">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    📊 PROGRESS TRACKING
-                  </CardTitle>
-                  <Badge variant="outline" className="text-base">
-                    {completedTables}/{tableStatuses.length} Tables
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-6">
-                <div className="grid grid-cols-3 gap-4">
-                  <Card>
-                    <CardContent className="pt-4">
-                      <p className="text-sm text-muted-foreground">Overall Status</p>
-                      <p className="text-lg font-semibold mt-1">
-                        {completedTables === tableStatuses.length ? "🟢 Complete" : "🟡 Running"}
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-4">
-                      <p className="text-sm text-muted-foreground">Elapsed Time</p>
-                      <p className="text-lg font-semibold mt-1">{Math.floor((Date.now() - startTime) / 1000)}s</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-4">
-                      <p className="text-sm text-muted-foreground">Total Execution</p>
-                      <p className="text-lg font-semibold mt-1">
-                        {completedTables === tableStatuses.length 
-                          ? `${Math.floor((Date.now() - startTime) / 1000)}s` 
-                          : "-"}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="space-y-3">
-                  {tableStatuses.map((table, idx) => (
-                    <Card key={idx} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{table.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{table.parameters}</p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            {getStatusBadge(table.status)}
-                            <p className="text-sm font-mono min-w-[60px] text-right">
-                              {table.status === "completed" && `${table.time}s`}
-                              {table.status === "running" && `${table.time}s...`}
-                              {table.status === "pending" && "-"}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
