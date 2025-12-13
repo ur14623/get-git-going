@@ -1,4 +1,4 @@
-import { LayoutDashboard, ChevronRight, Database, Megaphone, Headphones, Gavel, Moon, Lock, FileCode2, Zap, KeyRound, UserCheck } from "lucide-react";
+import { LayoutDashboard, ChevronRight, Database, Megaphone, Headphones, Gavel, Moon, Lock, FileCode2, Zap, KeyRound, UserCheck, Bookmark } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -78,6 +78,22 @@ export function AppSidebar() {
                     <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
                     <Database className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-sidebar-primary" />
                     {open && <span className="text-sm transition-colors">Base Preparation</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Saved Tables */}
+              <SidebarMenuItem className="animate-fade-in">
+                <SidebarMenuButton asChild className={`group relative overflow-hidden rounded-lg hover:bg-sidebar-accent/80 transition-all duration-300 ${!open ? "justify-center" : ""}`}>
+                  <NavLink 
+                    to="/saved-tables" 
+                    end
+                    className="relative z-10"
+                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-sidebar-primary"
+                  >
+                    <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+                    <Bookmark className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-sidebar-primary" />
+                    {open && <span className="text-sm transition-colors">Saved Tables</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
