@@ -16,6 +16,14 @@ import Customer360 from "./pages/Customer360";
 import Reports from "./pages/Reports";
 import RewardAccountManagement from "./pages/RewardAccountManagement";
 import Configuration from "./pages/Configuration";
+import MpesaCoreDetail from "./pages/configuration/MpesaCoreDetail";
+import SmscDetail from "./pages/configuration/SmscDetail";
+import UssdGatewayDetail from "./pages/configuration/UssdGatewayDetail";
+import AppPushDetail from "./pages/configuration/AppPushDetail";
+import RewardAccountDetail from "./pages/configuration/RewardAccountDetail";
+import EmailServiceDetail from "./pages/configuration/EmailServiceDetail";
+import IvrConfigDetail from "./pages/configuration/IvrConfigDetail";
+import DatabaseDetail from "./pages/configuration/DatabaseDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +52,14 @@ const App = () => (
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/reward-accounts" element={<RewardAccountManagement />} />
                   <Route path="/configuration" element={<Configuration />} />
+                  <Route path="/configuration/mpesa-core" element={<MpesaCoreDetail />} />
+                  <Route path="/configuration/smsc" element={<SmscDetail />} />
+                  <Route path="/configuration/ussd-gateway" element={<UssdGatewayDetail />} />
+                  <Route path="/configuration/app-push" element={<AppPushDetail />} />
+                  <Route path="/configuration/reward-account" element={<RewardAccountDetail />} />
+                  <Route path="/configuration/email-service" element={<EmailServiceDetail />} />
+                  <Route path="/configuration/ivr-config" element={<IvrConfigDetail />} />
+                  <Route path="/configuration/database" element={<DatabaseDetail />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AppLayout>
