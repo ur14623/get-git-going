@@ -30,8 +30,13 @@ const channelData = [
     icon: Bell,
     enabled: true,
     config: {
-      title: "🎉 Festive Rewards Await!",
-      body: "Complete a transaction today and earn 10 ETB cashback instantly!",
+      templates: {
+        english: "🎉 Festive Rewards Await! Complete a transaction today and earn 10 ETB cashback instantly!",
+        amharic: "🎉 የበዓል ሽልማቶች ይጠብቁዎታል! ዛሬ ግብይት ያጠናቅቁ እና 10 ብር ካሽባክ ወዲያውኑ ያግኙ!",
+        oromifa: "🎉 Badhaasni Ayyaanaa Sin Eega! Har'a daldala xumuri 10 ETB cashback battaluma argadhu!",
+        tigrinya: "🎉 ናይ በዓል ሽልማታት ይጽበዩኻ! ሎሚ ግብይት ኣጠናቕቕ 10 ብር ካሽባክ ብቕልጡፍ ርኸብ!",
+        somali: "🎉 Abaalmarinta Ciidda Ayaa Kugu Sugaysa! Maanta wax iibso oo 10 ETB cashback isla markiiba hel!",
+      },
       deepLink: "mpesa://rewards",
     },
     metrics: {
@@ -43,29 +48,41 @@ const channelData = [
   {
     type: "USSD",
     icon: Smartphone,
-    enabled: false,
+    enabled: true,
     config: {
-      pushText: "Dial *234# for festive rewards",
+      templates: {
+        english: "Dial *234# for festive rewards. Main Menu → Rewards → Claim your cashback!",
+        amharic: "*234# ይደውሉ ለበዓል ሽልማቶች። ዋና ምናሌ → ሽልማቶች → ካሽባክዎን ይጠይቁ!",
+        oromifa: "*234# bilbili badhaasa ayyaanaatiif. Menu Ijoo → Badhaasa → Cashback kee gaafadhu!",
+        tigrinya: "*234# ደውሉ ንናይ በዓል ሽልማታት። ዋና ሜኑ → ሽልማታት → ካሽባክካ ሕተት!",
+        somali: "*234# garaac abaalmarinta ciidda. Menu-ga Ugu Weyn → Abaalmarinta → Cashback-gaaga codso!",
+      },
       sessionFlow: "Main Menu → Rewards → Claim",
     },
     metrics: {
-      sent: 0,
-      delivered: 0,
-      failed: 0,
+      sent: 28000,
+      delivered: 26500,
+      failed: 1500,
     },
   },
   {
     type: "Email",
     icon: Mail,
-    enabled: false,
+    enabled: true,
     config: {
+      templates: {
+        english: "Dear valued customer, celebrate this festive season with exclusive M-Pesa rewards. Complete any transaction and get 10 ETB cashback instantly!",
+        amharic: "ውድ ደንበኛችን፣ ይህን የበዓል ወቅት ልዩ የM-Pesa ሽልማቶች ጋር ያክብሩ። ማንኛውንም ግብይት ያጠናቅቁ እና 10 ብር ካሽባክ ወዲያውኑ ያግኙ!",
+        oromifa: "Maamilaa keenya kabajamaa, yeroo ayyaana kana badhaasa M-Pesa addaa waliin kabaji. Daldala kamiyyuu xumuri 10 ETB cashback battaluma argadhu!",
+        tigrinya: "ክቡር ዓሚልና፣ ነዚ ናይ በዓል ወቕቲ ፍሉይ ሽልማታት M-Pesa ተጠቂምካ ኣኽብሮ። ዝኾነ ግብይት ኣጠናቕቕ 10 ብር ካሽባክ ብቕልጡፍ ርኸብ!",
+        somali: "Macmiilka qaaliga ah, ciiddan ku dabaal dag abaalmarino gaar ah oo M-Pesa ah. Wax iibso oo hel 10 ETB cashback isla markiiba!",
+      },
       subject: "Your Festive Season Rewards",
-      bodyPreview: "Dear valued customer, celebrate this festive season with exclusive M-Pesa rewards...",
     },
     metrics: {
-      sent: 0,
-      delivered: 0,
-      failed: 0,
+      sent: 32000,
+      delivered: 30500,
+      failed: 1500,
     },
   },
 ];
@@ -142,17 +159,26 @@ export function ChannelsTab() {
                   </div>
                 )}
 
-                {channel.type === "Push Notification" && (
+                {channel.type === "Push Notification" && channel.config.templates && (
                   <div className="space-y-3">
                     <div>
-                      <span className="text-xs text-muted-foreground">Title</span>
-                      <p className="mt-1 font-medium">{channel.config.title}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground">Body</span>
-                      <div className="mt-1 bg-muted/50 p-3 text-sm">
-                        {channel.config.body}
-                      </div>
+                      <span className="text-xs text-muted-foreground">Message Templates (5 Languages)</span>
+                      <Tabs defaultValue="english" className="mt-2">
+                        <TabsList className="h-auto flex-wrap">
+                          {Object.keys(channel.config.templates).map((lang) => (
+                            <TabsTrigger key={lang} value={lang} className="text-xs">
+                              {languageLabels[lang]}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+                        {Object.entries(channel.config.templates).map(([lang, template]) => (
+                          <TabsContent key={lang} value={lang}>
+                            <div className="bg-muted/50 p-3 text-sm font-mono mt-2">
+                              {template}
+                            </div>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
                     </div>
                     <div>
                       <span className="text-xs text-muted-foreground">Deep Link</span>
@@ -161,11 +187,26 @@ export function ChannelsTab() {
                   </div>
                 )}
 
-                {channel.type === "USSD" && (
+                {channel.type === "USSD" && channel.config.templates && (
                   <div className="space-y-3">
                     <div>
-                      <span className="text-xs text-muted-foreground">Push Text</span>
-                      <p className="mt-1 font-medium">{channel.config.pushText}</p>
+                      <span className="text-xs text-muted-foreground">Message Templates (5 Languages)</span>
+                      <Tabs defaultValue="english" className="mt-2">
+                        <TabsList className="h-auto flex-wrap">
+                          {Object.keys(channel.config.templates).map((lang) => (
+                            <TabsTrigger key={lang} value={lang} className="text-xs">
+                              {languageLabels[lang]}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+                        {Object.entries(channel.config.templates).map(([lang, template]) => (
+                          <TabsContent key={lang} value={lang}>
+                            <div className="bg-muted/50 p-3 text-sm font-mono mt-2">
+                              {template}
+                            </div>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
                     </div>
                     <div>
                       <span className="text-xs text-muted-foreground">Session Flow</span>
@@ -174,17 +215,30 @@ export function ChannelsTab() {
                   </div>
                 )}
 
-                {channel.type === "Email" && (
+                {channel.type === "Email" && channel.config.templates && (
                   <div className="space-y-3">
                     <div>
                       <span className="text-xs text-muted-foreground">Subject</span>
                       <p className="mt-1 font-medium">{channel.config.subject}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-muted-foreground">Body Preview</span>
-                      <div className="mt-1 bg-muted/50 p-3 text-sm">
-                        {channel.config.bodyPreview}
-                      </div>
+                      <span className="text-xs text-muted-foreground">Message Templates (5 Languages)</span>
+                      <Tabs defaultValue="english" className="mt-2">
+                        <TabsList className="h-auto flex-wrap">
+                          {Object.keys(channel.config.templates).map((lang) => (
+                            <TabsTrigger key={lang} value={lang} className="text-xs">
+                              {languageLabels[lang]}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+                        {Object.entries(channel.config.templates).map(([lang, template]) => (
+                          <TabsContent key={lang} value={lang}>
+                            <div className="bg-muted/50 p-3 text-sm font-mono mt-2">
+                              {template}
+                            </div>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
                     </div>
                   </div>
                 )}
