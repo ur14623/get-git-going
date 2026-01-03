@@ -166,20 +166,10 @@ export default function CampaignDetail() {
                 Stop
               </Button>
             )}
-            <Button variant="outline" className="gap-2">
-              <Copy className="w-4 h-4" />
-              Duplicate
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Download className="w-4 h-4" />
-              Export Summary
-            </Button>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <CampaignKPIs kpis={campaign.kpis} isRunning={isRunning} />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
