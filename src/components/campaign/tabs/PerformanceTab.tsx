@@ -34,8 +34,8 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 
-// Mock campaign assignment data
-const campaignAssignment = {
+// Mock campaign assignment data (merged header + assignment summary)
+const campaignData = {
   campaignName: "Festive Season Rewards",
   campaignId: "CMP-2024-001",
   status: "Active" as "Active" | "Completed" | "Stopped",
@@ -93,11 +93,12 @@ const rewardUtilization = {
   remainingBalance: 1102500,
 };
 
-const rewardDistribution = [
-  { type: "Cashback", count: 28900, amount: 289000 },
-  { type: "Bonus Credit", count: 8500, amount: 85000 },
-  { type: "Data Bundle", count: 1100, amount: 11000 },
-];
+// Single reward type as per most campaigns
+const rewardDistribution = {
+  type: "Cashback",
+  count: 28900,
+  amount: 289000,
+};
 
 // Daily trend data - showing targeted vs activated (back to activity)
 const dailyTrendData = [
@@ -111,7 +112,7 @@ const dailyTrendData = [
 ];
 
 export function PerformanceTab() {
-  const isRunning = campaignAssignment.status === "Active";
+  const isRunning = campaignData.status === "Active";
 
   return (
     <div className="space-y-6">
@@ -125,85 +126,62 @@ export function PerformanceTab() {
         </div>
       )}
 
-      {/* Header Section */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold">{campaignAssignment.campaignName}</h2>
-                <Badge 
-                  className={cn(
-                    campaignAssignment.status === "Active" && "bg-success/10 text-success border-success/20",
-                    campaignAssignment.status === "Completed" && "bg-info/10 text-info border-info/20",
-                    campaignAssignment.status === "Stopped" && "bg-destructive/10 text-destructive border-destructive/20"
-                  )}
-                >
-                  {campaignAssignment.status}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Campaign ID</span>
-                  <p className="font-medium">{campaignAssignment.campaignId}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Campaign Period</span>
-                  <p className="font-medium">{campaignAssignment.startDate} – {campaignAssignment.endDate}</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" />
-                Export Report
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Assignment Summary */}
+      {/* Merged: Campaign Header + Assignment Summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
-            Assignment Summary
-          </CardTitle>
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Target className="w-5 h-5 text-primary" />
+              <CardTitle className="text-lg">{campaignData.campaignName}</CardTitle>
+              <Badge 
+                className={cn(
+                  campaignData.status === "Active" && "bg-success/10 text-success border-success/20",
+                  campaignData.status === "Completed" && "bg-info/10 text-info border-info/20",
+                  campaignData.status === "Stopped" && "bg-destructive/10 text-destructive border-destructive/20"
+                )}
+              >
+                {campaignData.status}
+              </Badge>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
+              <span className="text-sm text-muted-foreground">Campaign ID</span>
+              <p className="font-medium">{campaignData.campaignId}</p>
+            </div>
+            <div>
+              <span className="text-sm text-muted-foreground">Campaign Period</span>
+              <p className="font-medium">{campaignData.startDate} – {campaignData.endDate}</p>
+            </div>
+            <div>
               <span className="text-sm text-muted-foreground">Assigned Segment</span>
-              <p className="font-medium">{campaignAssignment.assignedSegment}</p>
+              <p className="font-medium">{campaignData.assignedSegment}</p>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Segment Size</span>
-              <p className="font-medium">{campaignAssignment.segmentSize.toLocaleString()} customers</p>
+              <p className="font-medium">{campaignData.segmentSize.toLocaleString()} customers</p>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Campaign Objective</span>
-              <p className="font-medium">{campaignAssignment.campaignObjective}</p>
+              <p className="font-medium">{campaignData.campaignObjective}</p>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Channels Used</span>
               <div className="flex flex-wrap gap-1 mt-1">
-                {campaignAssignment.channelsUsed.map(channel => (
+                {campaignData.channelsUsed.map(channel => (
                   <Badge key={channel} variant="outline" className="text-xs">{channel}</Badge>
                 ))}
               </div>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Reward Type</span>
-              <p className="font-medium">{campaignAssignment.rewardType}</p>
+              <p className="font-medium">{campaignData.rewardType}</p>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Reward Account</span>
-              <p className="font-medium">{campaignAssignment.rewardAccount}</p>
-            </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Expected Outcome</span>
-              <p className="font-medium">{campaignAssignment.expectedOutcome}</p>
+              <p className="font-medium">{campaignData.rewardAccount}</p>
             </div>
           </div>
         </CardContent>
@@ -250,11 +228,15 @@ export function PerformanceTab() {
 
       {/* Channel Performance - removed Engaged and Converted columns */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-primary" />
             Channel Performance
           </CardTitle>
+          <Button variant="outline" size="sm" className="gap-1">
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
         </CardHeader>
         <CardContent>
           <Table>
@@ -290,11 +272,15 @@ export function PerformanceTab() {
 
       {/* Daily Trend Chart - Targeted vs Activated (back to activity) */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />
             Daily Performance Trend (Targeted vs Activated)
           </CardTitle>
+          <Button variant="outline" size="sm" className="gap-1">
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="h-64">
@@ -330,11 +316,15 @@ export function PerformanceTab() {
 
       {/* Reward Utilization */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Gift className="w-5 h-5 text-primary" />
             Reward Utilization
           </CardTitle>
+          <Button variant="outline" size="sm" className="gap-1">
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Summary Metrics */}
@@ -361,53 +351,25 @@ export function PerformanceTab() {
             </div>
           </div>
 
-          {/* Distribution Table */}
+          {/* Single Reward Type Distribution */}
           <div>
             <h4 className="font-medium mb-3">Reward Distribution</h4>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Reward Type</TableHead>
-                  <TableHead className="text-right">Count</TableHead>
+                  <TableHead className="text-right">Reward Receivers</TableHead>
                   <TableHead className="text-right">Total Amount (ETB)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rewardDistribution.map((row) => (
-                  <TableRow key={row.type}>
-                    <TableCell className="font-medium">{row.type}</TableCell>
-                    <TableCell className="text-right">{row.count.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{row.amount.toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
+                <TableRow>
+                  <TableCell className="font-medium">{rewardDistribution.type}</TableCell>
+                  <TableCell className="text-right">{rewardDistribution.count.toLocaleString()}</TableCell>
+                  <TableCell className="text-right">{rewardDistribution.amount.toLocaleString()}</TableCell>
+                </TableRow>
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Export Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Download className="w-5 h-5 text-primary" />
-            Export Reports
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="outline" className="gap-2">
-              <Download className="w-4 h-4" />
-              Export Summary (PDF)
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Download className="w-4 h-4" />
-              Export Customer Detail (CSV)
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Download className="w-4 h-4" />
-              Export Reward Usage (Excel)
-            </Button>
           </div>
         </CardContent>
       </Card>
