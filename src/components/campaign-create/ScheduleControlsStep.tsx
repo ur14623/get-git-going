@@ -18,7 +18,7 @@ interface ScheduleControlsStepProps {
 }
 
 const triggerOptions = [
-  { value: "", label: "No trigger" },
+  { value: "none", label: "No trigger" },
   { value: "inactivity", label: "After inactivity (X days)" },
   { value: "failed_txn", label: "After failed transaction" },
   { value: "reward_received", label: "After reward received" },
